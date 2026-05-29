@@ -1,0 +1,34 @@
+{
+  "funds": {
+    "depositAmount": 1000,
+    "nasdaqExposureLimitPercent": 60
+  },
+  "allocation": {
+    "fixedAllocationEnabled": true,
+    "boughtPercent": 40,
+    "reserveCashPercent": 20
+  },
+  "drawdown": {
+    "levelsPercent": [
+      -10,
+      -15,
+      -20,
+      -25
+    ]
+  },
+  "snapshot": {
+    "triggerLevelPercent": -10,
+    "baselineReserveAmount": 0,
+    "lockedAt": "",
+    "cycleId": ""
+  },
+  "general": {
+    "enableTrading": false,
+    "environment": "paper",
+    "userNotes": ""
+  },
+  "meta": {
+    "configVersion": 1,
+    "lastSavedAt": "2026-01-17T03:56:35.865Z"
+  }
+}

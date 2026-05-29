@@ -1,0 +1,2364 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NSDK 参数配置</title>
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --panel: rgba(30, 40, 60, 0.82);
+      --panel-strong: rgba(20, 30, 50, 0.94);
+      --panel-soft: rgba(10, 14, 23, 0.64);
+      --border: rgba(76, 175, 80, 0.18);
+      --border-strong: rgba(76, 175, 80, 0.36);
+      --text: #e0e6ed;
+      --muted: #8899aa;
+      --faint: #667788;
+      --green: #4caf50;
+      --green-soft: #81c784;
+      --gold: #ffd700;
+      --blue: #42a5f5;
+      --orange: #ff9800;
+      --red: #ef5350;
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+    }
+
+    * { box-sizing: border-box; }
+    html { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { min-height: 44px; }
+    input, select, textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid rgba(129, 199, 132, 0.22);
+      border-radius: 8px;
+      background: rgba(10, 14, 23, 0.78);
+      color: var(--text);
+      padding: 9px 11px;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+    textarea {
+      min-height: 142px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(129, 199, 132, 0.76);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.14);
+      background: rgba(10, 14, 23, 0.92);
+    }
+    input[disabled], textarea[disabled], select[disabled] {
+      opacity: 0.64;
+      cursor: not-allowed;
+    }
+
+    .container {
+      width: min(1400px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 44px;
+    }
+    .header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      padding: 34px 0 26px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    .eyebrow {
+      color: var(--green-soft);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.12;
+      letter-spacing: 0;
+      background: linear-gradient(135deg, var(--green), var(--green-soft), var(--gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .subtitle {
+      margin-top: 9px;
+      color: var(--muted);
+      max-width: 820px;
+    }
+    .status {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 520px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .tag.success { color: var(--green-soft); background: rgba(76, 175, 80, 0.15); border-color: rgba(76, 175, 80, 0.32); }
+    .tag.warning { color: var(--orange); background: rgba(255, 152, 0, 0.15); border-color: rgba(255, 152, 0, 0.32); }
+    .tag.danger { color: var(--red); background: rgba(239, 83, 80, 0.15); border-color: rgba(239, 83, 80, 0.32); }
+    .tag.info { color: var(--blue); background: rgba(66, 165, 245, 0.14); border-color: rgba(66, 165, 245, 0.28); }
+    .tag.gold { color: var(--gold); background: rgba(255, 215, 0, 0.13); border-color: rgba(255, 215, 0, 0.32); }
+
+    .section {
+      background: linear-gradient(135deg, var(--panel), var(--panel-strong));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.18);
+    }
+    .section.gold {
+      border-color: rgba(255, 215, 0, 0.3);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.08);
+    }
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      margin: 0;
+      padding-left: 12px;
+      border-left: 3px solid var(--green);
+      color: var(--green-soft);
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+    .section-title.gold { color: var(--gold); border-left-color: var(--gold); }
+    .meta {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      color: var(--faint);
+      font-size: 13px;
+      word-break: break-word;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid rgba(129, 199, 132, 0.24);
+      border-radius: 8px;
+      padding: 9px 14px;
+      background: rgba(10, 14, 23, 0.62);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 750;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(129, 199, 132, 0.56);
+      background: rgba(76, 175, 80, 0.14);
+      box-shadow: 0 8px 24px rgba(76, 175, 80, 0.12);
+    }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn.primary { background: rgba(76, 175, 80, 0.2); border-color: rgba(76, 175, 80, 0.52); color: #eaffea; }
+    .btn.success { background: rgba(76, 175, 80, 0.24); border-color: rgba(129, 199, 132, 0.62); color: var(--green-soft); }
+    .btn.warning { background: rgba(255, 152, 0, 0.15); border-color: rgba(255, 152, 0, 0.36); color: #ffd08a; }
+    .btn.danger { background: rgba(239, 83, 80, 0.12); border-color: rgba(239, 83, 80, 0.36); color: #ff9a98; }
+
+    .notice {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      border-radius: 10px;
+      border: 1px solid rgba(66, 165, 245, 0.22);
+      background: rgba(66, 165, 245, 0.09);
+      padding: 11px 13px;
+      margin-bottom: 14px;
+      color: #b9d9ff;
+      font-size: 14px;
+    }
+    .notice.success { color: #c7f6c9; background: rgba(76, 175, 80, 0.1); border-color: rgba(76, 175, 80, 0.28); }
+    .notice.warning { color: #ffe0a3; background: rgba(255, 152, 0, 0.1); border-color: rgba(255, 152, 0, 0.28); }
+    .notice.error { color: #ffc2c0; background: rgba(239, 83, 80, 0.1); border-color: rgba(239, 83, 80, 0.3); }
+
+    .overview {
+      display: grid;
+      grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+      gap: 24px;
+      align-items: center;
+    }
+    .donut-wrap {
+      display: grid;
+      place-items: center;
+      background: rgba(10, 14, 23, 0.52);
+      border: 1px solid rgba(129, 199, 132, 0.13);
+      border-radius: 10px;
+      min-height: 280px;
+      padding: 18px;
+    }
+    .donut {
+      position: relative;
+      width: min(230px, 70vw);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: conic-gradient(var(--green) var(--invested-deg), var(--gold) 0);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 44px rgba(0, 0, 0, 0.28);
+    }
+    .donut::after {
+      content: "";
+      position: absolute;
+      inset: 24%;
+      border-radius: 50%;
+      background: #0a0e17;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .donut-center {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
+    .donut-number {
+      font-size: 28px;
+      font-weight: 850;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .donut-label { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .stat {
+      min-height: 122px;
+      border: 1px solid rgba(76, 175, 80, 0.16);
+      border-radius: 10px;
+      background: rgba(10, 14, 23, 0.48);
+      padding: 16px;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .stat:hover {
+      transform: translateY(-2px);
+      border-color: rgba(76, 175, 80, 0.38);
+      box-shadow: 0 8px 30px rgba(76, 175, 80, 0.1);
+    }
+    .stat-label { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+    .stat-value { color: #fff; font-size: clamp(22px, 3vw, 34px); font-weight: 850; line-height: 1.18; }
+    .stat-note { margin-top: 8px; color: var(--faint); font-size: 13px; }
+    .market-line {
+      grid-column: 1 / -1;
+      border: 1px solid rgba(66, 165, 245, 0.22);
+      border-radius: 8px;
+      background: rgba(66, 165, 245, 0.08);
+      color: #b9d9ff;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+    .data-table th {
+      background: rgba(76, 175, 80, 0.15);
+      color: var(--green-soft);
+      text-align: left;
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(76, 175, 80, 0.3);
+      font-size: 13px;
+    }
+    .data-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      vertical-align: top;
+    }
+    .data-table tr:hover td { background: rgba(76, 175, 80, 0.05); }
+
+    .switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      width: 50px;
+      height: 28px;
+    }
+    .switch input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+    }
+    .slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      left: 2px;
+      top: 2px;
+      border-radius: 50%;
+      background: #dce6ed;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+    .switch input:checked + .slider {
+      background: rgba(76, 175, 80, 0.48);
+      border-color: rgba(129, 199, 132, 0.7);
+    }
+    .switch input:checked + .slider::before {
+      transform: translateX(22px);
+      background: #fff;
+    }
+
+    details.group {
+      border: 1px solid rgba(76, 175, 80, 0.16);
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(30, 40, 60, 0.62), rgba(20, 30, 50, 0.68));
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    details.group > summary {
+      list-style: none;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      cursor: pointer;
+      color: #fff;
+      font-weight: 800;
+    }
+    details.group > summary::-webkit-details-marker { display: none; }
+    .summary-sub { color: var(--muted); font-size: 13px; font-weight: 600; margin-left: 8px; }
+    .summary-mark { color: var(--green-soft); font-size: 18px; }
+    details[open] .summary-mark { color: var(--gold); }
+    .group-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      padding: 0 18px 18px;
+    }
+    .field {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: rgba(10, 14, 23, 0.48);
+      padding: 16px;
+    }
+    .field-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .field-name { display: grid; gap: 2px; }
+    .field-zh { color: #fff; font-weight: 800; }
+    .field-en, .field-key, .field-desc { color: var(--muted); font-size: 12px; }
+    .field-key { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; word-break: break-all; text-align: right; }
+    .field-desc { margin-top: 10px; line-height: 1.55; }
+    .field-errors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+    .json-error { color: #ffaaa8; font-size: 12px; margin-top: 7px; }
+
+    .state-grid, .dialog-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .state-block {
+      border: 1px solid rgba(76, 175, 80, 0.16);
+      border-radius: 10px;
+      background: rgba(10, 14, 23, 0.48);
+      padding: 16px;
+    }
+    .state-title { color: #fff; font-weight: 800; margin-bottom: 8px; }
+    .state-line { color: var(--muted); font-size: 13px; line-height: 1.8; word-break: break-all; }
+
+    .modal-backdrop, .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(0, 0, 0, 0.58);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+    .modal {
+      width: min(620px, 100%);
+      max-height: calc(100dvh - 36px);
+      overflow: auto;
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(30, 40, 60, 0.98), rgba(20, 30, 50, 0.98));
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-title { margin: 0; color: var(--green-soft); font-size: 20px; }
+    .modal-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .form-item { display: grid; gap: 7px; }
+    label { color: var(--muted); font-size: 13px; font-weight: 800; }
+
+    .drawer-backdrop {
+      place-items: stretch end;
+      padding: 0;
+    }
+    .drawer {
+      width: min(760px, 100%);
+      height: 100dvh;
+      overflow: auto;
+      border-left: 1px solid var(--border-strong);
+      background: linear-gradient(135deg, rgba(30, 40, 60, 0.99), rgba(20, 30, 50, 0.99));
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+    .drawer-section { margin-top: 20px; }
+    .json-cell {
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+      color: #c9d5de;
+      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    }
+    .empty {
+      border: 1px dashed rgba(129, 199, 132, 0.22);
+      border-radius: 10px;
+      padding: 16px;
+      color: var(--muted);
+      text-align: center;
+      background: rgba(10, 14, 23, 0.3);
+    }
+    .hidden { display: none; }
+
+    @media (max-width: 900px) {
+      .header { grid-template-columns: 1fr; align-items: start; }
+      .status { justify-content: flex-start; }
+      .section-head { display: grid; }
+      .meta { justify-content: flex-start; }
+      .overview, .stats-grid, .group-grid, .state-grid, .dialog-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .container { width: min(100% - 22px, 1400px); padding-top: 14px; }
+      .section { padding: 15px; }
+      .actions, .modal-foot { display: grid; grid-template-columns: 1fr; }
+      .btn { width: 100%; }
+      .field-head { display: grid; }
+      .field-key { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <input id="settingsFileInput" class="hidden" type="file" accept="application/json,.json" />
+  <input id="stateFileInput" class="hidden" type="file" accept="application/json,.json" />
+  <div id="app"></div>
+
+  <script>
+    const schema = {
+      version: 1,
+      groups: [
+        {
+          id: "funds",
+          titleZh: "资金与敞口",
+          titleEn: "Funds & Exposure",
+          fields: [
+            { key: "funds.depositAmount", nameZh: "总资产(自动汇总)", nameEn: "Total Assets (Auto)", description: "总资产 = 纳指持仓 + 备用金 + 其他现金。按 v3.0 执行手册，看比例不看固定金额。", type: "number", default: 0, editable: false, validation: { required: true, min: 0, max: 1000000000 } },
+            { key: "funds.nasdaqExposureLimitPercent", nameZh: "纳指持仓敞口上限(%)", nameEn: "NASDAQ Position Exposure Limit (%)", description: "v3.0：纳指敞口只计算当前持仓；备用金是未来买入弹药，不计入敞口。", type: "number", default: 70, validation: { required: true, min: 0, max: 100 } }
+          ]
+        },
+        {
+          id: "allocation",
+          titleZh: "固定比例拆分",
+          titleEn: "Fixed Allocation",
+          hidden: true,
+          fields: [
+            { key: "allocation.fixedAllocationEnabled", nameZh: "启用固定比例约束", nameEn: "Enable Fixed Allocation Constraint", description: "v3.0 固定比例：40% 持仓 + 30% 备用金 + 30% 其他现金。", type: "boolean", default: true, validation: { required: true } },
+            { key: "allocation.boughtTargetPercent", nameZh: "纳指目标占比(%)", nameEn: "Bought Target (%)", description: "固定比例默认 40%。用于计算“目标金额”与校验，不代表当前已买入金额。", type: "number", default: 40, validation: { required: true, min: 0, max: 100 } },
+            { key: "allocation.reserveCashTargetPercent", nameZh: "备用金目标占比(%)", nameEn: "Reserve Cash Target (%)", description: "v3.0：备用金目标 30%，仅用于回撤分档买入。", type: "number", default: 30, validation: { required: true, min: 0, max: 100 } },
+            { key: "allocation.otherCashTargetPercent", nameZh: "其他现金目标占比(%)", nameEn: "Other Cash Target (%)", description: "v3.0：其他现金目标 30%，用于生活/应急/自由支配。", type: "number", default: 30, validation: { required: true, min: 0, max: 100 } },
+            { key: "allocation.monthlyCashflowCny", nameZh: "月度现金流(元)", nameEn: "Monthly Cashflow (CNY)", description: "执行手册：每月发工资后操作一次，默认 ¥4,000。", type: "number", default: 4000, validation: { required: true, min: 0, max: 1000000000 } }
+          ]
+        },
+        {
+          id: "portfolio",
+          titleZh: "投资金额（手动输入）",
+          titleEn: "Portfolio Amounts",
+          fields: [
+            { key: "portfolio.assets", nameZh: "资产持仓表", nameEn: "Portfolio Assets", description: "统一维护 ETF、股票、场外基金、现金和纳指回撤备用金。", type: "objectArray", default: [], hidden: true, validation: { required: false } },
+            { key: "portfolio.investedNasdaqCny", nameZh: "纳指已投资金额(元)", nameEn: "Invested NASDAQ Amount (CNY)", description: "由资产持仓表自动汇总：category=nasdaq 的市值合计。", type: "number", default: 0, editable: false, hidden: true, validation: { required: true, min: 0, max: 1000000000 } },
+            { key: "portfolio.reserveCashNasdaqCny", nameZh: "备用金余额(元)", nameEn: "Reserve Cash Balance (CNY)", description: "由资产持仓表自动汇总：category=nasdaq_reserve_cash 的固定金额合计。", type: "number", default: 0, editable: false, hidden: true, validation: { required: true, min: 0, max: 1000000000 } },
+            { key: "portfolio.reserveUsedNasdaqCny", nameZh: "纳指备用金已使用额度(元)", nameEn: "Reserve Used Amount (CNY)", description: "兼容旧配置字段；v3.0 页面按真实备用金余额执行。", type: "number", default: 0, hidden: true, validation: { required: true, min: 0, max: 1000000000 } },
+            { key: "portfolio.otherCashCny", nameZh: "其他资产与现金(元)", nameEn: "Other Assets & Cash (CNY)", description: "由资产持仓表自动汇总：黄金、其他股票、普通现金等非纳指资产合计。", type: "number", default: 0, editable: false, hidden: true, validation: { required: true, min: 0, max: 1000000000 } },
+            { key: "portfolio.fearOfMissingOut", nameZh: "怕踏空标记", nameEn: "Fear Of Missing Out", description: "手动标记：连续上涨触发怕踏空时打开；NSDK将据此进入冻结状态。", type: "boolean", default: false, validation: { required: true } }
+          ]
+        },
+        {
+          id: "drawdown",
+          titleZh: "回撤与快照机制",
+          titleEn: "Drawdown & Snapshot",
+          fields: [
+            { key: "drawdown.levelsPercent", nameZh: "回撤档位(%)", nameEn: "Drawdown Levels (%)", description: "规则：本轮所有 -10/-15/-20/-25 档位都按快照基准计算与执行。", type: "numberArray", default: [-10, -15, -20, -25], validation: { required: true } },
+            { key: "drawdown.executedLevels", nameZh: "已执行档位映射", nameEn: "Executed Levels Map", description: "各回撤档位是否已执行，键为档位(例如 10/15/20/25)，值为 true/false。", type: "object", default: {}, validation: { required: true } },
+            { key: "snapshot.triggerLevelPercent", nameZh: "快照触发档位(%)", nameEn: "Snapshot Trigger Level (%)", description: "第一次触发回撤 -10% 的那一天锁定快照基准。", type: "number", default: -10, editable: false, validation: { required: true } },
+            { key: "snapshot.baselineReserveAmount", nameZh: "快照基准储备金余额", nameEn: "Snapshot Baseline Reserve Amount", description: "回撤加仓用的是“回撤开始时锁定的基准储备金”，不是当下实时储备金。", type: "number", default: 0, editable: false, validation: { required: true, min: 0, max: 1000000000 } },
+            { key: "snapshot.lockedAt", nameZh: "快照锁定时间", nameEn: "Snapshot Locked At", description: "第一次触发回撤档位当天记录并锁死快照基准。", type: "string", default: "", editable: false, validation: { required: false, maxLength: 64 } },
+            { key: "snapshot.cycleId", nameZh: "回撤周期ID", nameEn: "Drawdown Cycle ID", description: "用于区分不同回撤周期（建议补充）。", type: "string", default: "", editable: false, validation: { required: false, maxLength: 64 } }
+          ]
+        },
+        // {
+        //   id: "meta",
+        //   titleZh: "状态（只读）",
+        //   titleEn: "Meta (Read-only)",
+        //   fields: [
+        //     { key: "meta.configVersion", nameZh: "配置版本号", nameEn: "Config Version", description: "每次保存自动递增。", type: "integer", default: 1, editable: false, validation: { required: true, min: 1, max: 1000000000 } },
+        //     { key: "meta.lastSavedAt", nameZh: "最后保存时间", nameEn: "Last Saved At", description: "每次保存自动更新（ISO 字符串）。", type: "string", default: "", editable: false, validation: { required: false, maxLength: 64 } }
+        //   ]
+        // },
+        {
+          id: "nsdk",
+          titleZh: "NSDK 运行配置",
+          titleEn: "NSDK Runtime",
+          fields: [
+            { key: "nsdk.fund.code", nameZh: "标的代码", nameEn: "Fund Code", description: "例如 513100。", type: "string", default: "513100", validation: { required: true, maxLength: 32 } },
+            { key: "nsdk.fund.secid", nameZh: "东方财富 secid", nameEn: "Eastmoney SecID", description: "例如 1.513100。", type: "string", default: "1.513100", validation: { required: true, maxLength: 64 } },
+            { key: "nsdk.fund.name", nameZh: "标的名称", nameEn: "Fund Name", description: "用于展示与推送文案。", type: "string", default: "纳指ETF", validation: { required: true, maxLength: 64 } },
+            { key: "nsdk.benchmark.provider", nameZh: "回撤基准来源", nameEn: "Benchmark Provider", description: "eastmoney=东财；stooq=Stooq 日线（易失效）；finnhub=Finnhub（免费档用 quote+52 周高，见文档）。", type: "string", default: "eastmoney", validation: { required: true, options: ["eastmoney", "stooq", "finnhub"] } },
+            { key: "nsdk.benchmark.secid", nameZh: "回撤基准 Eastmoney secid", nameEn: "Benchmark Eastmoney SecID", description: "provider=eastmoney 时使用，例如 1.513100。", type: "string", default: "1.513100", validation: { required: false, maxLength: 64 } },
+            { key: "nsdk.benchmark.symbol", nameZh: "回撤基准 Stooq Symbol", nameEn: "Benchmark Stooq Symbol", description: "provider=stooq 或 finnhub 时使用，例如 NDX / QQQ。finnhub 免费档下 NDX 实际用 QQQ 拉数。", type: "string", default: "QQQ", validation: { required: false, maxLength: 64 } },
+            { key: "nsdk.finnhub.apiKey", nameZh: "Finnhub API Key", nameEn: "Finnhub API Key", description: "provider=finnhub 时必填；也可用环境变量 FINNHUB_API_KEY（优先）。", type: "string", default: "", props: { type: "password", showPassword: true }, validation: { required: false, maxLength: 128 } },
+            { key: "nsdk.benchmark.name", nameZh: "回撤基准名称", nameEn: "Benchmark Name", description: "用于展示与推送文案，例如 纳指指数（IXIC）。", type: "string", default: "纳指指数（IXIC）", validation: { required: false, maxLength: 64 } },
+            { key: "nsdk.timezone", nameZh: "时区", nameEn: "Timezone", description: "建议保持 Asia/Shanghai。", type: "string", default: "Asia/Shanghai", validation: { required: true, maxLength: 64 } },
+            { key: "nsdk.logDir", nameZh: "日志目录", nameEn: "Log Directory", description: "例如 D:/log-nsdk。", type: "string", default: "D:/log-nsdk", validation: { required: false, maxLength: 256 } },
+            { key: "nsdk.pushEnabled", nameZh: "启用推送", nameEn: "Push Enabled", description: "关闭后不推送（仍会运行与写日志）。", type: "boolean", default: true, validation: { required: true } },
+            { key: "nsdk.serverChan.sendKey", nameZh: "Server酱 SendKey", nameEn: "ServerChan SendKey", description: "pushEnabled 为 true 时必填。", type: "string", default: "", props: { type: "password", showPassword: true }, validation: { required: false, maxLength: 128 } },
+            { key: "nsdk.startupHeartbeatEnabled", nameZh: "启动心跳", nameEn: "Startup Heartbeat", description: "启动后每日只推送一次心跳。", type: "boolean", default: true, validation: { required: true } },
+            { key: "nsdk.otcDcaCnyPerWorkday", nameZh: "每日定投(工作日/元)", nameEn: "OTC DCA per Workday", description: "旧版兼容字段；v3.0 以月度现金流和月度场外定投为主。", type: "number", default: 0, hidden: true, validation: { required: true, min: 0, max: 1000000000 } },
+            { key: "nsdk.weeklyActiveBuy", nameZh: "每周主动建仓（JSON）", nameEn: "Weekly Active Buy (JSON)", description: "旧版兼容字段；v3.0 默认关闭，月度操作按执行面板建议处理。", type: "object", default: null, validation: { required: false } },
+            { key: "nsdk.dailyChecks", nameZh: "每日例行检查时间点（JSON）", nameEn: "Daily Checks (JSON)", description: "数组：[{hour:'10',minute:'30'},{hour:'14',minute:'30'}]。", type: "objectArray", default: [{ hour: "10", minute: "30" }, { hour: "14", minute: "30" }], validation: { required: true } }
+          ]
+        }
+      ]
+    };
+
+    const STORAGE_KEY = "tz-nsdk-configurator";
+    const TIERS = ["10", "15", "20", "25"];
+    const moneyFormatter = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 });
+    const assetCategories = [
+      { value: "nasdaq", label: "纳斯达克持仓" },
+      { value: "nasdaq_reserve_cash", label: "纳指回撤备用金" },
+      { value: "gold", label: "黄金" },
+      { value: "stock", label: "其他股票/ETF" },
+      { value: "cash", label: "普通现金" }
+    ];
+    const assetKinds = [
+      { value: "exchange", label: "场内ETF/股票" },
+      { value: "fund", label: "场外基金" },
+      { value: "cash", label: "固定现金" }
+    ];
+
+    const app = document.getElementById("app");
+    const settingsFileInput = document.getElementById("settingsFileInput");
+    const stateFileInput = document.getElementById("stateFileInput");
+
+    const projectGithub = Object.freeze({
+      owner: "qq1446039171",
+      repo: "New-NASDAQ",
+      branch: "master"
+    });
+
+    const state = {
+      schema,
+      settings: null,
+      loadedSettings: null,
+      fileHandle: null,
+      fileName: "",
+      fileStatus: "none",
+      fileMessage: "",
+      fileMessageType: "info",
+      saveMessage: "",
+      saveMessageType: "success",
+      nsdkState: null,
+      loadedNsdkState: null,
+      stateFileHandle: null,
+      stateFileName: "",
+      stateFileStatus: "none",
+      stateMessage: "",
+      stateMessageType: "info",
+      openedGroups: new Set(schema.groups.filter((g) => !g.hidden).map((g) => g.id)),
+      githubSaveOpen: false,
+      githubSaving: false,
+      githubRepoOwner: projectGithub.owner,
+      githubRepoName: projectGithub.repo,
+      githubBranch: projectGithub.branch,
+      githubToken: "",
+      githubCommitMessage: "chore(config): update settings from web",
+      adjustOpen: false,
+      addDepositDelta: 0,
+      addNasdaqInvestDelta: 0,
+      addReserveDelta: 0,
+      addOtherCashDelta: 0,
+      versionsOpen: false,
+      diffChanges: [],
+      assetPriceLoading: false,
+      assetPriceMessage: "",
+      assetPriceMessageType: "info"
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function nowIso() {
+      return new Date().toISOString();
+    }
+
+    function cloneValue(value) {
+      if (value === null || value === undefined || typeof value !== "object") return value;
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function deepGet(obj, key) {
+      const parts = key.split(".");
+      let cur = obj;
+      for (const p of parts) {
+        if (!cur || typeof cur !== "object") return undefined;
+        cur = cur[p];
+      }
+      return cur;
+    }
+
+    function deepSet(obj, key, value) {
+      const parts = key.split(".");
+      let cur = obj;
+      for (let i = 0; i < parts.length - 1; i += 1) {
+        const p = parts[i];
+        if (!cur[p] || typeof cur[p] !== "object") cur[p] = {};
+        cur = cur[p];
+      }
+      cur[parts[parts.length - 1]] = value;
+    }
+
+    function buildDefaults(targetSchema) {
+      const out = {};
+      for (const group of targetSchema.groups || []) {
+        for (const field of group.fields || []) deepSet(out, field.key, cloneValue(field.default));
+      }
+      return out;
+    }
+
+    function normalizeBySchema(targetSchema, input) {
+      const out = buildDefaults(targetSchema);
+      const src = input && typeof input === "object" ? cloneValue(input) : {};
+
+      if (src.allocation && typeof src.allocation === "object") {
+        if (src.allocation.boughtTargetPercent === undefined && src.allocation.boughtPercent !== undefined) src.allocation.boughtTargetPercent = src.allocation.boughtPercent;
+        if (src.allocation.reserveCashTargetPercent === undefined && src.allocation.reserveCashPercent !== undefined) src.allocation.reserveCashTargetPercent = src.allocation.reserveCashPercent;
+      }
+
+      if (src.portfolio && typeof src.portfolio === "object") {
+        const deposit = Number(src?.funds?.depositAmount) || 0;
+        const invested = Math.max(0, Number(src.portfolio.investedNasdaqCny) || 0);
+        const reserve = Math.max(0, Number(src.portfolio.reserveCashNasdaqCny) || 0);
+        if (src.portfolio.otherCashCny === undefined) {
+          src.portfolio.otherCashCny = Math.max(0, deposit - invested - reserve);
+        }
+        src.portfolio.reserveUsedNasdaqCny = Math.max(0, Number(src.portfolio.reserveUsedNasdaqCny) || 0);
+      }
+
+      for (const group of targetSchema.groups || []) {
+        for (const field of group.fields || []) {
+          const value = deepGet(src, field.key);
+          if (value !== undefined) deepSet(out, field.key, value);
+        }
+      }
+      return out;
+    }
+
+    function validateLocal(targetSchema, settings) {
+      const fieldErrors = {};
+      const addErr = (key, msg) => {
+        fieldErrors[key] = fieldErrors[key] || [];
+        fieldErrors[key].push(msg);
+      };
+
+      for (const group of targetSchema.groups || []) {
+        for (const field of group.fields || []) {
+          const rules = field.validation || {};
+          const value = deepGet(settings, field.key);
+          if (rules.required && (value === null || value === undefined || value === "")) addErr(field.key, "必填");
+          if (value === null || value === undefined || value === "") continue;
+
+          if (field.type === "number" || field.type === "integer") {
+            if (typeof value !== "number" || Number.isNaN(value)) addErr(field.key, "必须是数字");
+            if (field.type === "integer" && !Number.isInteger(value)) addErr(field.key, "必须是整数");
+            if (typeof rules.min === "number" && value < rules.min) addErr(field.key, `最小值为 ${rules.min}`);
+            if (typeof rules.max === "number" && value > rules.max) addErr(field.key, `最大值为 ${rules.max}`);
+          } else if (field.type === "boolean") {
+            if (typeof value !== "boolean") addErr(field.key, "必须是布尔值");
+          } else if (field.type === "string") {
+            if (typeof value !== "string") addErr(field.key, "必须是字符串");
+            if (typeof rules.maxLength === "number" && typeof value === "string" && value.length > rules.maxLength) addErr(field.key, `长度不能超过 ${rules.maxLength}`);
+            if (Array.isArray(rules.options) && !rules.options.includes(value)) addErr(field.key, `必须是以下值之一：${rules.options.join(", ")}`);
+          } else if (field.type === "numberArray") {
+            if (!Array.isArray(value)) addErr(field.key, "必须是数字数组");
+            if (Array.isArray(value) && value.some((item) => typeof item !== "number" || Number.isNaN(item))) addErr(field.key, "数组元素必须都是数字");
+          } else if (field.type === "object") {
+            if (typeof value !== "object" || value === null || Array.isArray(value)) addErr(field.key, "必须是对象");
+          } else if (field.type === "objectArray") {
+            if (!Array.isArray(value)) addErr(field.key, "必须是对象数组");
+            if (Array.isArray(value) && value.some((item) => typeof item !== "object" || item === null || Array.isArray(item))) addErr(field.key, "数组元素必须都是对象");
+          }
+        }
+      }
+
+      const deposit = deepGet(settings, "funds.depositAmount");
+      const exposureLimitPercent = deepGet(settings, "funds.nasdaqExposureLimitPercent");
+      const investedAmount = deepGet(settings, "portfolio.investedNasdaqCny");
+      const boughtTarget = Number(deepGet(settings, "allocation.boughtTargetPercent")) || 0;
+      const reserveTarget = Number(deepGet(settings, "allocation.reserveCashTargetPercent")) || 0;
+      const otherTarget = Number(deepGet(settings, "allocation.otherCashTargetPercent")) || 0;
+      if (Math.abs((boughtTarget + reserveTarget + otherTarget) - 100) > 1e-6) {
+        const msg = "v3.0 三账户比例合计应为 100%";
+        addErr("allocation.boughtTargetPercent", msg);
+        addErr("allocation.reserveCashTargetPercent", msg);
+        addErr("allocation.otherCashTargetPercent", msg);
+      }
+      const maxExposure = ((Number(deposit) || 0) * (Number(exposureLimitPercent) || 0)) / 100;
+      const currentExposure = Number(investedAmount) || 0;
+      if (Number.isFinite(maxExposure) && maxExposure >= 0 && currentExposure > maxExposure + 1e-6) {
+        const msg = `当前纳指持仓敞口（${fmtMoney(currentExposure)}）超过上限（${fmtMoney(maxExposure)}）`;
+        addErr("portfolio.investedNasdaqCny", msg);
+      }
+
+      const pushEnabled = deepGet(settings, "nsdk.pushEnabled");
+      const sendKey = deepGet(settings, "nsdk.serverChan.sendKey");
+      if (pushEnabled !== false && (!sendKey || typeof sendKey !== "string" || !sendKey.trim())) addErr("nsdk.serverChan.sendKey", "pushEnabled 为 true 时必填");
+
+      const provider = deepGet(settings, "nsdk.benchmark.provider") || "eastmoney";
+      if (!["eastmoney", "stooq", "finnhub"].includes(provider)) {
+        addErr("nsdk.benchmark.provider", "必须是 eastmoney、stooq 或 finnhub");
+      } else if (provider === "eastmoney") {
+        const secid = deepGet(settings, "nsdk.benchmark.secid");
+        if (!secid || typeof secid !== "string" || !secid.trim()) addErr("nsdk.benchmark.secid", "provider=eastmoney 时必填");
+      } else {
+        const symbol = deepGet(settings, "nsdk.benchmark.symbol");
+        if (!symbol || typeof symbol !== "string" || !symbol.trim()) addErr("nsdk.benchmark.symbol", `provider=${provider} 时必填`);
+      }
+      return { ok: Object.keys(fieldErrors).length === 0, fieldErrors };
+    }
+
+    function isPlainObject(value) {
+      return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+    }
+
+    function clampNumber(value, fallback = 0) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    function normalizeNsdkState(raw) {
+      const src = isPlainObject(raw) ? raw : {};
+      const freezeSrc = isPlainObject(src.freeze) ? src.freeze : {};
+      const freeze = { active: Boolean(freezeSrc.active), reason: freezeSrc.reason ?? null, since: freezeSrc.since ?? null };
+      let drawdownRound = null;
+      if (src.drawdownRound === null || src.drawdownRound === undefined) {
+        drawdownRound = null;
+      } else if (isPlainObject(src.drawdownRound)) {
+        const roundSrc = src.drawdownRound;
+        const alertedSrc = isPlainObject(roundSrc.alerted) ? roundSrc.alerted : {};
+        const executedSrc = isPlainObject(roundSrc.executed) ? roundSrc.executed : {};
+        const alerted = {};
+        const executed = {};
+        for (const tier of TIERS) {
+          alerted[tier] = Boolean(alertedSrc[tier]);
+          executed[tier] = Boolean(executedSrc[tier]);
+        }
+        drawdownRound = {
+          startedAt: roundSrc.startedAt ?? null,
+          snapshotReserveCny: clampNumber(roundSrc.snapshotReserveCny, 0),
+          table: Array.isArray(roundSrc.table) ? roundSrc.table : [],
+          alerted,
+          executed
+        };
+      }
+      return {
+        lastRunKeys: isPlainObject(src.lastRunKeys) ? src.lastRunKeys : {},
+        drawdownRound,
+        lastMarket: isPlainObject(src.lastMarket) ? src.lastMarket : null,
+        freeze
+      };
+    }
+
+    function validateNsdkStateLocal(value) {
+      const errors = [];
+      const s = isPlainObject(value) ? value : null;
+      if (!s) return { ok: false, errors: ["state 不是对象"] };
+      if (!isPlainObject(s.freeze)) errors.push("freeze 缺失或不是对象");
+      if (s.drawdownRound !== null && s.drawdownRound !== undefined) {
+        if (!isPlainObject(s.drawdownRound)) {
+          errors.push("drawdownRound 不是对象或 null");
+        } else {
+          const r = s.drawdownRound;
+          if (!isPlainObject(r.executed)) errors.push("drawdownRound.executed 缺失或不是对象");
+          if (!isPlainObject(r.alerted)) errors.push("drawdownRound.alerted 缺失或不是对象");
+          for (const tier of TIERS) {
+            if (typeof r.executed?.[tier] !== "boolean") errors.push(`drawdownRound.executed.${tier} 不是 boolean`);
+            if (typeof r.alerted?.[tier] !== "boolean") errors.push(`drawdownRound.alerted.${tier} 不是 boolean`);
+          }
+        }
+      }
+      return { ok: errors.length === 0, errors };
+    }
+
+    function fmtMoney(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "-";
+      return moneyFormatter.format(n);
+    }
+
+    function fmtPercent(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "0";
+      return String(Math.round(n * 100) / 100);
+    }
+
+    function formatJson(value, pretty = false) {
+      try { return JSON.stringify(value, null, pretty ? 2 : 0); } catch { return String(value); }
+    }
+
+    function categoryLabel(value) {
+      return assetCategories.find((item) => item.value === value)?.label || value || "-";
+    }
+
+    function kindLabel(value) {
+      return assetKinds.find((item) => item.value === value)?.label || value || "-";
+    }
+
+    function portfolioAssets() {
+      const assets = state.settings?.portfolio?.assets;
+      return Array.isArray(assets) ? assets : [];
+    }
+
+    function hasPortfolioAssets() {
+      return portfolioAssets().some((asset) => asset && asset.enabled !== false);
+    }
+
+    function inferSecid(code) {
+      const clean = String(code || "").trim();
+      if (!clean) return "";
+      if (/^\d{6}$/.test(clean)) {
+        if (/^(5|6|9)/.test(clean)) return `1.${clean}`;
+        return `0.${clean}`;
+      }
+      return clean.includes(".") ? clean : "";
+    }
+
+    function normalizeAsset(asset, index = 0) {
+      const code = String(asset?.code || "").trim();
+      const kind = asset?.kind || (asset?.category === "cash" || asset?.category === "nasdaq_reserve_cash" ? "cash" : "exchange");
+      const id = String(asset?.id || code || `asset-${index + 1}`).trim();
+      return {
+        id,
+        name: String(asset?.name || code || `资产 ${index + 1}`).trim(),
+        category: asset?.category || "stock",
+        kind,
+        code,
+        secid: String(asset?.secid || inferSecid(code)).trim(),
+        shares: Math.max(0, Number(asset?.shares) || 0),
+        amountCny: Math.max(0, Number(asset?.amountCny) || 0),
+        lastPrice: Math.max(0, Number(asset?.lastPrice) || 0),
+        lastPriceAt: asset?.lastPriceAt || "",
+        enabled: asset?.enabled !== false
+      };
+    }
+
+    function normalizeAssetsInSettings() {
+      if (!state.settings) return;
+      const assets = portfolioAssets();
+      state.settings.portfolio.assets = assets.map(normalizeAsset);
+    }
+
+    function assetValue(asset) {
+      const item = normalizeAsset(asset);
+      if (!item.enabled) return 0;
+      if (item.kind === "cash") return item.amountCny;
+      return item.shares * item.lastPrice;
+    }
+
+    function assetSummary() {
+      const summary = {
+        total: 0,
+        nasdaq: 0,
+        nasdaqReserveCash: 0,
+        other: 0,
+        byCategory: {},
+        rows: []
+      };
+      for (const raw of portfolioAssets()) {
+        const asset = normalizeAsset(raw);
+        if (!asset.enabled) continue;
+        const value = assetValue(asset);
+        summary.total += value;
+        summary.byCategory[asset.category] = (summary.byCategory[asset.category] || 0) + value;
+        if (asset.category === "nasdaq") summary.nasdaq += value;
+        else if (asset.category === "nasdaq_reserve_cash") summary.nasdaqReserveCash += value;
+        else summary.other += value;
+        summary.rows.push({ ...asset, marketValueCny: value });
+      }
+      summary.total = Math.round(summary.total * 100) / 100;
+      summary.nasdaq = Math.round(summary.nasdaq * 100) / 100;
+      summary.nasdaqReserveCash = Math.round(summary.nasdaqReserveCash * 100) / 100;
+      summary.other = Math.round(summary.other * 100) / 100;
+      return summary;
+    }
+
+    async function fetchExchangePrice(asset) {
+      const secid = asset.secid || inferSecid(asset.code);
+      if (!secid) throw new Error("缺少 secid");
+      const fields = ["f43", "f58", "f170"].join(",");
+      const url = `https://push2.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&secid=${encodeURIComponent(secid)}&fields=${fields}`;
+      let json;
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        json = await res.json();
+      } catch {
+        json = await fetchJsonp(`${url}&cb=__callback__`);
+      }
+      const data = json?.data || {};
+      const raw = Number(data.f43);
+      const price = Number.isFinite(raw) && Math.abs(raw) > 1000 ? raw / 1000 : raw;
+      if (!Number.isFinite(price) || price <= 0) throw new Error("价格无效");
+      return { price, name: data.f58 || asset.name, pct: data.f170 };
+    }
+
+    function fetchJsonp(urlTemplate) {
+      return new Promise((resolve, reject) => {
+        const callbackName = `__nsdkJsonp_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        const script = document.createElement("script");
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error("JSONP 请求超时"));
+        }, 8000);
+        function cleanup() {
+          clearTimeout(timeout);
+          script.remove();
+          delete window[callbackName];
+        }
+        window[callbackName] = (data) => {
+          cleanup();
+          resolve(data);
+        };
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("JSONP 请求失败"));
+        };
+        script.src = urlTemplate.replace("__callback__", callbackName);
+        document.head.appendChild(script);
+      });
+    }
+
+    function fetchFundPrice(asset) {
+      const code = String(asset.code || "").trim();
+      if (!code) return Promise.reject(new Error("缺少基金代码"));
+      return new Promise((resolve, reject) => {
+        const old = window.jsonpgz;
+        const script = document.createElement("script");
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error("基金净值请求超时"));
+        }, 8000);
+        function cleanup() {
+          clearTimeout(timeout);
+          script.remove();
+          window.jsonpgz = old;
+        }
+        window.jsonpgz = (data) => {
+          cleanup();
+          const price = Number(data?.gsz || data?.dwjz);
+          if (!Number.isFinite(price) || price <= 0) reject(new Error("基金净值无效"));
+          else resolve({ price, name: data?.name || asset.name, pct: data?.gszzl });
+        };
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("基金净值请求失败"));
+        };
+        script.src = `https://fundgz.1234567.com.cn/js/${encodeURIComponent(code)}.js?rt=${Date.now()}`;
+        document.head.appendChild(script);
+      });
+    }
+
+    async function refreshAssetPrices() {
+      if (!state.settings || state.assetPriceLoading) return;
+      normalizeAssetsInSettings();
+      const assets = portfolioAssets();
+      state.assetPriceLoading = true;
+      state.assetPriceMessage = "正在刷新资产价格...";
+      state.assetPriceMessageType = "info";
+      render();
+      let ok = 0;
+      let failed = 0;
+      for (const asset of assets) {
+        if (!asset.enabled || asset.kind === "cash") continue;
+        try {
+          const quote = asset.kind === "fund" ? await fetchFundPrice(asset) : await fetchExchangePrice(asset);
+          asset.lastPrice = Math.round(Number(quote.price) * 10000) / 10000;
+          asset.lastPriceAt = nowIso();
+          if (quote.name && (!asset.name || asset.name === asset.code)) asset.name = quote.name;
+          if (!asset.secid && asset.kind === "exchange") asset.secid = inferSecid(asset.code);
+          ok += 1;
+        } catch (error) {
+          failed += 1;
+          asset.lastPriceError = error?.message || String(error);
+        }
+      }
+      state.assetPriceLoading = false;
+      state.assetPriceMessageType = failed ? "warning" : "success";
+      state.assetPriceMessage = failed ? `已刷新 ${ok} 个资产，${failed} 个失败；失败项保留上次价格。` : `已刷新 ${ok} 个资产价格。`;
+      syncDerived();
+      render();
+    }
+
+    function depositAmount() { return Number(state.settings?.funds?.depositAmount) || 0; }
+    function nasdaqInvestedAmount() { return Number(state.settings?.portfolio?.investedNasdaqCny) || 0; }
+    function nasdaqReserveCashAmount() { return Number(state.settings?.portfolio?.reserveCashNasdaqCny) || 0; }
+    function otherCashAmount() { return Number(state.settings?.portfolio?.otherCashCny) || 0; }
+    function nasdaqReserveUsedAmount() { return Number(state.settings?.portfolio?.reserveUsedNasdaqCny) || 0; }
+    function exposureLimitPercent() { return Number(state.settings?.funds?.nasdaqExposureLimitPercent) || 0; }
+    function boughtTargetPercent() { return Number(state.settings?.allocation?.boughtTargetPercent) || 0; }
+    function reserveTargetPercent() { return Number(state.settings?.allocation?.reserveCashTargetPercent) || 0; }
+    function otherCashTargetPercent() { return Number(state.settings?.allocation?.otherCashTargetPercent) || 0; }
+    function monthlyCashflowAmount() { return Number(state.settings?.allocation?.monthlyCashflowCny) || 0; }
+    function targetInvestAmount() { return (depositAmount() * boughtTargetPercent()) / 100; }
+    function remainingInvestAmount() { return Math.max(0, targetInvestAmount() - nasdaqInvestedAmount()); }
+    function targetReserveAmount() { return (depositAmount() * reserveTargetPercent()) / 100; }
+    function remainingReserveAmount() { return Math.max(0, targetReserveAmount() - nasdaqReserveCashAmount()); }
+    function targetOtherCashAmount() { return (depositAmount() * otherCashTargetPercent()) / 100; }
+    function reserveUsedAmount() { return Math.max(0, nasdaqReserveUsedAmount()); }
+    function maxExposureAmount() { return (depositAmount() * exposureLimitPercent()) / 100; }
+    function currentExposureAmount() { return nasdaqInvestedAmount(); }
+    function remainingExposureAmount() { return Math.max(0, maxExposureAmount() - currentExposureAmount()); }
+    function pctOfDeposit(value) { return depositAmount() <= 0 ? 0 : Math.round((value / depositAmount()) * 10000) / 100; }
+    function reserveUsedPercentOfTarget() { return targetReserveAmount() <= 0 ? 0 : Math.round((reserveUsedAmount() / targetReserveAmount()) * 10000) / 100; }
+    function nasdaqExposureOverLimit() { return currentExposureAmount() > maxExposureAmount() + 1e-6; }
+    function monthlyPlan() {
+      const monthly = monthlyCashflowAmount();
+      const investPart = Math.round(monthly * (boughtTargetPercent() / 100));
+      const reservePart = Math.round(monthly * (reserveTargetPercent() / 100));
+      if (nasdaqInvestedAmount() >= targetInvestAmount() - 1e-6) {
+        return { invest: 0, reserve: 0, other: monthly, label: "持仓已达 40%，本月全进其他现金" };
+      }
+      if (nasdaqReserveCashAmount() >= targetReserveAmount() - 1e-6) {
+        return { invest: investPart, reserve: 0, other: Math.max(0, monthly - investPart), label: "持仓未满、备用金已满，本月买持仓并溢出其他现金" };
+      }
+      return { invest: investPart, reserve: reservePart, other: Math.max(0, monthly - investPart - reservePart), label: "持仓与备用金都未满，本月按 40/30/30 分配" };
+    }
+    function dirty() { return Boolean(state.settings && state.loadedSettings && JSON.stringify(state.settings) !== JSON.stringify(state.loadedSettings)); }
+    function nsdkStateDirty() { return Boolean(state.nsdkState && state.loadedNsdkState && JSON.stringify(state.nsdkState) !== JSON.stringify(state.loadedNsdkState)); }
+    function localValidation() { return state.settings ? validateLocal(state.schema, state.settings) : { ok: true, fieldErrors: {} }; }
+    function stateLocalValidation() { return state.nsdkState ? validateNsdkStateLocal(state.nsdkState) : { ok: true, errors: [] }; }
+
+    function syncDerived() {
+      if (!state.settings) return;
+      if (hasPortfolioAssets()) {
+        normalizeAssetsInSettings();
+        const summary = assetSummary();
+        deepSet(state.settings, "portfolio.investedNasdaqCny", Math.round(summary.nasdaq * 100) / 100);
+        deepSet(state.settings, "portfolio.reserveCashNasdaqCny", Math.round(summary.nasdaqReserveCash * 100) / 100);
+        deepSet(state.settings, "portfolio.otherCashCny", Math.round(summary.other * 100) / 100);
+      }
+      const total = Math.max(0, nasdaqInvestedAmount()) + Math.max(0, nasdaqReserveCashAmount()) + Math.max(0, otherCashAmount());
+      const next = Math.round(total * 100) / 100;
+      const current = Number(state.settings?.funds?.depositAmount) || 0;
+      if (Math.abs(current - next) > 1e-6) deepSet(state.settings, "funds.depositAmount", next);
+    }
+
+    function getDrawdownLevelsFromSettings() {
+      const raw = state.settings?.drawdown?.levelsPercent;
+      if (!Array.isArray(raw)) return [10, 15, 20, 25];
+      const levels = raw.map(Number).filter(Number.isFinite).map(Math.abs).filter((v) => v > 0);
+      const uniq = Array.from(new Set(levels)).sort((a, b) => a - b);
+      return uniq.length ? uniq : [10, 15, 20, 25];
+    }
+
+    function getExecutedLevelsFromSettings() {
+      const src = state.settings?.drawdown?.executedLevels || {};
+      const map = {};
+      for (const level of getDrawdownLevelsFromSettings()) map[String(level)] = Boolean(src[String(level)]);
+      return map;
+    }
+
+    function settingsDrawdownRows() {
+      const executed = getExecutedLevelsFromSettings();
+      return getDrawdownLevelsFromSettings().map((tier) => ({ tier: String(tier), executed: Boolean(executed[String(tier)]) }));
+    }
+
+    function drawdownSnapshotActive() {
+      if (state.nsdkState?.drawdownRound) return true;
+      const snapshot = state.settings?.snapshot || {};
+      return Boolean(
+        String(snapshot.lockedAt || "").trim()
+        || String(snapshot.cycleId || "").trim()
+        || Number(snapshot.baselineReserveAmount) > 0
+      );
+    }
+
+    function drawdownTierRows() {
+      const round = state.nsdkState?.drawdownRound;
+      if (!round) return [];
+      const executed = getExecutedLevelsFromSettings();
+      const table = Array.isArray(round.table) ? round.table : [];
+      return getDrawdownLevelsFromSettings().map((tier) => {
+        const row = table.find((item) => String(item?.level) === String(tier));
+        return {
+          tier: String(tier),
+          amountCny: row?.amountCny ?? null,
+          alerted: Boolean(round.alerted?.[String(tier)]),
+          executed: Boolean(executed[String(tier)])
+        };
+      });
+    }
+
+    function setTierExecuted(tier, value) {
+      const next = { ...(state.settings?.drawdown?.executedLevels || {}) };
+      next[String(tier)] = Boolean(value);
+      deepSet(state.settings, "drawdown.executedLevels", next);
+      render();
+    }
+
+    function loadStoredState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : { versions: [], logs: [], githubPrefs: {} };
+      } catch {
+        return { versions: [], logs: [], githubPrefs: {} };
+      }
+    }
+
+    function saveStoredState(value) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    }
+
+    async function addVersionSnapshot(reason) {
+      const stored = loadStoredState();
+      const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      stored.versions = stored.versions || [];
+      stored.versions.unshift({ id, savedAt: nowIso(), reason, settings: cloneValue(state.settings) });
+      stored.versions = stored.versions.slice(0, 50);
+      saveStoredState(stored);
+    }
+
+    async function addLog(entry) {
+      const stored = loadStoredState();
+      stored.logs = stored.logs || [];
+      stored.logs.unshift({ at: nowIso(), ...entry });
+      stored.logs = stored.logs.slice(0, 200);
+      saveStoredState(stored);
+    }
+
+    function persistGithubPrefs() {
+      enforceProjectGithubTarget();
+      const stored = loadStoredState();
+      stored.githubPrefs = {
+        owner: state.githubRepoOwner,
+        repo: state.githubRepoName,
+        branch: state.githubBranch,
+        commitMessage: state.githubCommitMessage
+      };
+      saveStoredState(stored);
+    }
+
+    function enforceProjectGithubTarget() {
+      state.githubRepoOwner = projectGithub.owner;
+      state.githubRepoName = projectGithub.repo;
+      state.githubBranch = projectGithub.branch;
+    }
+
+    function loadDefaults() {
+      state.settings = normalizeBySchema(state.schema, {});
+      syncDerived();
+      state.loadedSettings = cloneValue(state.settings);
+    }
+
+    async function tryAutoLoadSettings() {
+      enforceProjectGithubTarget();
+      persistGithubPrefs();
+      const candidates = [];
+      const owner = state.githubRepoOwner.trim();
+      const repo = state.githubRepoName.trim();
+      const branch = state.githubBranch.trim() || "master";
+      if (owner && repo) {
+        candidates.push({
+          source: "github-raw",
+          name: `Config/settings.json @ ${owner}/${repo}#${branch}`,
+          url: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/Config/settings.json?ts=${Date.now()}`
+        });
+      }
+      candidates.push(
+        { source: "local-static", name: "Config/settings.json（同源静态文件）", url: `./Config/settings.json?ts=${Date.now()}` },
+        { source: "local-static", name: "Config/settings.json（根路径）", url: `/Config/settings.json?ts=${Date.now()}` }
+      );
+
+      for (const candidate of candidates) {
+        try {
+          const res = await fetch(candidate.url, { cache: "no-store" });
+          if (!res.ok) continue;
+          const text = await res.text();
+          const json = JSON.parse(text);
+          state.settings = normalizeBySchema(state.schema, json);
+          syncDerived();
+          state.loadedSettings = cloneValue(state.settings);
+          state.fileStatus = "loaded";
+          state.fileName = candidate.name;
+          state.fileMessageType = "success";
+          state.fileMessage = `已自动加载：${candidate.name}`;
+          await addVersionSnapshot(`autoLoad:${candidate.source}`);
+          await addLog({ action: "autoLoad", ok: true, reason: candidate.url, bytes: text.length });
+          render();
+          if (hasPortfolioAssets()) await refreshAssetPrices();
+          return true;
+        } catch {
+          // keep trying candidates
+        }
+      }
+      await addLog({ action: "autoLoad", ok: false, reason: "no_available_source", bytes: 0 });
+      render();
+      return false;
+    }
+
+    function renderStatus() {
+      const tags = [];
+      const statusMap = {
+        none: ["info", "未选择文件"],
+        loaded: ["success", "已打开文件"],
+        saved: ["success", "已保存"],
+        error: ["danger", "文件错误"]
+      };
+      const [type, label] = statusMap[state.fileStatus] || ["info", state.fileStatus];
+      tags.push(`<span class="tag ${type}">${escapeHtml(label)}</span>`);
+      if (nasdaqExposureOverLimit()) tags.push('<span class="tag danger">纳指持仓敞口超限</span>');
+      if (dirty()) tags.push('<span class="tag warning">未保存</span>');
+      if (!localValidation().ok) tags.push('<span class="tag danger">存在校验错误</span>');
+      return tags.join("");
+    }
+
+    function renderNotice(message, type) {
+      if (!message) return "";
+      const mark = type === "success" ? "OK" : type === "error" ? "!" : type === "warning" ? "!" : "i";
+      return `<div class="notice ${escapeHtml(type)}"><strong>${mark}</strong><span>${escapeHtml(message)}</span></div>`;
+    }
+
+    function renderActions() {
+      return `
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">操作</h2>
+            </div>
+            <div class="meta">
+              <span>配置版本：${escapeHtml(state.settings?.meta?.configVersion ?? "-")}</span>
+              <span>最后保存：${escapeHtml(state.settings?.meta?.lastSavedAt || "-")}</span>
+              <span>文件：${escapeHtml(state.fileName || "-")}</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn primary" data-action="open-file">打开文件</button>
+            <button class="btn success" data-action="save-file" ${state.settings && dirty() && localValidation().ok ? "" : "disabled"}>保存</button>
+            <button class="btn success" data-action="open-github" ${state.settings ? "" : "disabled"}>保存到 GitHub</button>
+
+          </div>
+          ${renderNotice(state.saveMessage, state.saveMessageType)}
+        </section>
+      `;
+    }
+    // <button class="btn" data-action="save-as" ${state.settings ? "" : "disabled"}>另存为</button>
+
+    function renderDrawdownTable(rows, includeAmount = false) {
+      const amountHead = includeAmount ? "<th>买入金额(¥)</th><th>已提醒</th>" : "";
+      const body = rows.map((row) => `
+        <tr>
+          <td>-${escapeHtml(row.tier)}%</td>
+          ${includeAmount ? `<td>¥${escapeHtml(fmtMoney(row.amountCny))}</td><td><span class="tag ${row.alerted ? "warning" : "info"}">${row.alerted ? "是" : "否"}</span></td>` : ""}
+          <td>
+            <label class="switch" aria-label="切换 -${escapeHtml(row.tier)}% 执行状态">
+              <input type="checkbox" data-action="tier-toggle" data-tier="${escapeHtml(row.tier)}" ${row.executed ? "checked" : ""} />
+              <span class="slider"></span>
+            </label>
+          </td>
+        </tr>
+      `).join("");
+      return `<table class="data-table"><thead><tr><th>档位</th>${amountHead}<th>已执行</th></tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function renderStateSection() {
+      if (!state.nsdkState) {
+        return `
+          <section class="section">
+            <div class="section-head">
+              <h2 class="section-title">NSDK 运行状态</h2>
+              <div class="meta"><span>state.json：${escapeHtml(state.stateFileName || "未加载")}</span></div>
+            </div>
+            ${renderNotice(state.stateMessage, state.stateMessageType)}
+            <div class="empty">可打开 state.json 查看冻结、行情和本轮回撤状态。</div>
+          </section>
+        `;
+      }
+      const round = state.nsdkState.drawdownRound;
+      const stateValidation = stateLocalValidation();
+      return `
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title">NSDK 运行状态</h2>
+            <div class="meta">
+              <span>state.json：${escapeHtml(state.stateFileName || "-")}</span>
+              <span>${nsdkStateDirty() ? "未保存" : "已同步"}</span>
+              <span>${stateValidation.ok ? "校验正常" : "存在错误"}</span>
+            </div>
+          </div>
+          <div class="actions" style="margin-bottom:14px">
+            <button class="btn success" data-action="save-state" ${state.nsdkState && nsdkStateDirty() && stateValidation.ok ? "" : "disabled"}>保存 state.json</button>
+            <button class="btn" data-action="save-state-as" ${state.nsdkState ? "" : "disabled"}>另存 state.json</button>
+            <button class="btn" data-action="reset-state" ${nsdkStateDirty() ? "" : "disabled"}>重置 state</button>
+          </div>
+          ${renderNotice(state.stateMessage, state.stateMessageType)}
+          <div class="state-grid">
+            <div class="state-block">
+              <div class="state-title">冻结（freeze）</div>
+              <div class="state-line">active：${state.nsdkState.freeze?.active ? "true" : "false"}</div>
+              <div class="state-line">reason：${escapeHtml(state.nsdkState.freeze?.reason ?? "-")}</div>
+              <div class="state-line">since：${escapeHtml(state.nsdkState.freeze?.since ?? "-")}</div>
+            </div>
+            <div class="state-block">
+              <div class="state-title">最近行情（lastMarket）</div>
+              <div class="state-line">code：${escapeHtml(state.nsdkState.lastMarket?.benchmark?.code ?? "-")} · ${escapeHtml(state.nsdkState.lastMarket?.benchmark?.name ?? "-")}</div>
+              <div class="state-line">price：${escapeHtml(state.nsdkState.lastMarket?.benchmark?.price ?? "-")} · pct：${escapeHtml(state.nsdkState.lastMarket?.benchmark?.pct ?? "-")}</div>
+              <div class="state-line">drawdownPct：${escapeHtml(state.nsdkState.lastMarket?.benchmark?.drawdownPct ?? "-")} · at：${escapeHtml(state.nsdkState.lastMarket?.at ?? "-")}</div>
+            </div>
+          </div>
+          <div style="margin-top:14px">
+            ${round ? `
+              <div class="state-block">
+                <div class="state-title">本轮回撤（drawdownRound）</div>
+                <div class="state-line">startedAt：${escapeHtml(round.startedAt ?? "-")}</div>
+                <div class="state-line">snapshotReserveCny：¥${escapeHtml(fmtMoney(round.snapshotReserveCny))}</div>
+                <div style="margin-top:12px">${renderDrawdownTable(drawdownTierRows(), true)}</div>
+              </div>
+            ` : renderNotice("当前未启动 drawdownRound（到 -10% 时由 NSDK 自动创建）。", "info")}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderAssetSection() {
+      if (!state.settings) return "";
+      const summary = assetSummary();
+      const rows = portfolioAssets().map((raw, index) => {
+        const asset = normalizeAsset(raw, index);
+        const value = assetValue(asset);
+        const pct = summary.total > 0 ? (value / summary.total) * 100 : 0;
+        const isCash = asset.kind === "cash";
+        return `
+          <tr>
+            <td><input data-asset-index="${index}" data-asset-field="name" value="${escapeHtml(asset.name)}" /></td>
+            <td>
+              <select data-asset-index="${index}" data-asset-field="category">
+                ${assetCategories.map((item) => `<option value="${escapeHtml(item.value)}" ${asset.category === item.value ? "selected" : ""}>${escapeHtml(item.label)}</option>`).join("")}
+              </select>
+            </td>
+            <td>
+              <select data-asset-index="${index}" data-asset-field="kind">
+                ${assetKinds.map((item) => `<option value="${escapeHtml(item.value)}" ${asset.kind === item.value ? "selected" : ""}>${escapeHtml(item.label)}</option>`).join("")}
+              </select>
+            </td>
+            <td><input data-asset-index="${index}" data-asset-field="code" value="${escapeHtml(asset.code)}" ${isCash ? "disabled" : ""} /></td>
+            <td><input data-asset-index="${index}" data-asset-field="shares" type="number" step="0.01" min="0" value="${escapeHtml(asset.shares)}" ${isCash ? "disabled" : ""} /></td>
+            <td><input data-asset-index="${index}" data-asset-field="amountCny" type="number" step="100" min="0" value="${escapeHtml(asset.amountCny)}" ${isCash ? "" : "disabled"} /></td>
+            <td>¥${escapeHtml(fmtMoney(asset.lastPrice))}</td>
+            <td>¥${escapeHtml(fmtMoney(value))}</td>
+            <td>${escapeHtml(fmtPercent(pct))}%</td>
+            <td>
+              <label class="switch" aria-label="启用 ${escapeHtml(asset.name)}">
+                <input type="checkbox" data-asset-index="${index}" data-asset-field="enabled" ${asset.enabled ? "checked" : ""} />
+                <span class="slider"></span>
+              </label>
+            </td>
+            <td><button class="btn danger" data-action="delete-asset" data-asset-index="${index}">删除</button></td>
+          </tr>
+        `;
+      }).join("");
+      const categoryRows = assetCategories
+        .map((item) => ({ ...item, valueCny: summary.byCategory[item.value] || 0 }))
+        .filter((item) => item.valueCny > 0)
+        .map((item) => `<span class="tag info">${escapeHtml(item.label)}：¥${escapeHtml(fmtMoney(item.valueCny))} / ${escapeHtml(fmtPercent(summary.total > 0 ? (item.valueCny / summary.total) * 100 : 0))}%</span>`)
+        .join("");
+      return `
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">资产持仓</h2>
+              <div class="field-desc">维护 A 股 ETF/股票、支付宝基金份额、纳指备用金和普通现金；旧金额字段会自动汇总。</div>
+            </div>
+            <div class="actions">
+              <button class="btn primary" data-action="add-asset">新增资产</button>
+              <button class="btn success" data-action="refresh-assets" ${state.assetPriceLoading ? "disabled" : ""}>${state.assetPriceLoading ? "刷新中..." : "刷新价格/净值"}</button>
+            </div>
+          </div>
+          ${renderNotice(state.assetPriceMessage, state.assetPriceMessageType)}
+          <div class="meta" style="justify-content:flex-start;margin-bottom:12px">
+            <span class="tag gold">总资产：¥${escapeHtml(fmtMoney(summary.total))}</span>
+            ${categoryRows}
+          </div>
+          ${rows ? `
+            <div style="overflow-x:auto">
+            <table class="data-table" style="min-width:1180px">
+              <thead>
+                <tr>
+                  <th>名称</th><th>分类</th><th>类型</th><th>代码</th><th>份额</th><th>固定金额</th><th>价格/净值</th><th>市值</th><th>占比</th><th>启用</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+            </div>
+          ` : '<div class="empty">暂无资产。点击“新增资产”开始记录份额、代码或现金金额。</div>'}
+        </section>
+      `;
+    }
+
+    function renderOverview() {
+      if (!state.settings) return "";
+      const total = depositAmount();
+      const invested = nasdaqInvestedAmount();
+      const reserve = nasdaqReserveCashAmount();
+      const other = otherCashAmount();
+      const investedPct = pctOfDeposit(invested);
+      const reservePct = pctOfDeposit(reserve);
+      const otherPct = pctOfDeposit(other);
+      const exposurePct = pctOfDeposit(currentExposureAmount());
+      const deg = total > 0 ? Math.max(0, Math.min(360, (currentExposureAmount() / total) * 360)) : 0;
+      const latest = state.nsdkState?.lastMarket?.benchmark || null;
+      const latestLine = latest ? `<div class="market-line">推送标的：${escapeHtml(latest.name || latest.code || "-")} · 当前价格：${escapeHtml(fmtMoney(latest.price))} · 回撤幅度：${escapeHtml(fmtPercent(latest.drawdownPct))}%</div>` : "";
+      const plan = monthlyPlan();
+      const freezeReasons = [];
+      if (invested >= targetInvestAmount() - 1e-6) freezeReasons.push("持仓≥40%");
+      if (currentExposureAmount() >= maxExposureAmount() - 1e-6) freezeReasons.push("持仓敞口≥70%");
+      if (state.settings?.portfolio?.fearOfMissingOut) freezeReasons.push("怕踏空标记");
+      const freezeLine = freezeReasons.length ? `冻结：${freezeReasons.join(" / ")}` : "冻结：否";
+      const snapshotLine = drawdownSnapshotActive()
+        ? `快照已开启 · 基准 ¥${fmtMoney(state.settings?.snapshot?.baselineReserveAmount || state.nsdkState?.drawdownRound?.snapshotReserveCny || 0)}`
+        : "快照未开启 · 到 -10% 自动锁定备用金";
+      return `
+        <section class="section gold">
+          <div class="section-head">
+            <h2 class="section-title gold">v3.0 执行面板</h2>
+            <button class="btn primary" data-action="open-adjust" ${state.settings ? "" : "disabled"}>新增金额</button>
+          </div>
+          <div class="overview">
+            <div class="donut-wrap">
+              <div class="donut" style="--invested-deg:${deg}deg">
+                <div class="donut-center">
+                  <div class="donut-number">${escapeHtml(fmtPercent(exposurePct))}%</div>
+                  <div class="donut-label">纳指持仓敞口</div>
+                </div>
+              </div>
+            </div>
+            <div class="stats-grid">
+              ${latestLine}
+              <div class="stat">
+                <div class="stat-label">总资产</div>
+                <div class="stat-value">¥${escapeHtml(fmtMoney(total))}</div>
+                <div class="stat-note">持仓 ${escapeHtml(fmtPercent(boughtTargetPercent()))}% · 备用金 ${escapeHtml(fmtPercent(reserveTargetPercent()))}% · 其他 ${escapeHtml(fmtPercent(otherCashTargetPercent()))}%</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">持仓（513100 + 场外基金）</div>
+                <div class="stat-value">¥${escapeHtml(fmtMoney(invested))}</div>
+                <div class="stat-note">${escapeHtml(fmtPercent(investedPct))}% / 目标 ${escapeHtml(fmtPercent(boughtTargetPercent()))}% · 差 ¥${escapeHtml(fmtMoney(remainingInvestAmount()))}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">备用金（余额宝/短债）</div>
+                <div class="stat-value">¥${escapeHtml(fmtMoney(reserve))}</div>
+                <div class="stat-note">${escapeHtml(fmtPercent(reservePct))}% / 目标 ${escapeHtml(fmtPercent(reserveTargetPercent()))}% · 差 ¥${escapeHtml(fmtMoney(remainingReserveAmount()))}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">其他现金</div>
+                <div class="stat-value">¥${escapeHtml(fmtMoney(other))}</div>
+                <div class="stat-note">${escapeHtml(fmtPercent(otherPct))}% / 目标 ${escapeHtml(fmtPercent(otherCashTargetPercent()))}% · 目标 ¥${escapeHtml(fmtMoney(targetOtherCashAmount()))}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">纳指持仓敞口</div>
+                <div class="stat-value">¥${escapeHtml(fmtMoney(currentExposureAmount()))}</div>
+                <div class="stat-note">${escapeHtml(fmtPercent(exposurePct))}% / 上限 ${escapeHtml(fmtPercent(exposureLimitPercent()))}% · 剩余 ¥${escapeHtml(fmtMoney(remainingExposureAmount()))}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">本月执行建议</div>
+                <div class="stat-value">¥${escapeHtml(fmtMoney(monthlyCashflowAmount()))}</div>
+                <div class="stat-note">${escapeHtml(plan.label)}：持仓 ¥${escapeHtml(fmtMoney(plan.invest))} / 备用金 ¥${escapeHtml(fmtMoney(plan.reserve))} / 其他 ¥${escapeHtml(fmtMoney(plan.other))}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">纪律状态</div>
+                <div class="stat-value">${escapeHtml(freezeReasons.length ? "冻结" : "正常")}</div>
+                <div class="stat-note">${escapeHtml(freezeLine)} · ${escapeHtml(snapshotLine)}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function findField(key) {
+      for (const group of state.schema.groups || []) {
+        for (const field of group.fields || []) if (field.key === key) return field;
+      }
+      return null;
+    }
+
+    function renderFieldControl(field) {
+      const value = deepGet(state.settings, field.key);
+      const disabled = field.editable === false ? "disabled" : "";
+      const common = `data-field="${escapeHtml(field.key)}" ${disabled}`;
+      if (field.type === "boolean") {
+        return `<label class="switch" aria-label="${escapeHtml(field.nameZh)}"><input type="checkbox" ${common} ${value ? "checked" : ""} /><span class="slider"></span></label>`;
+      }
+      if ((field.type === "string") && Array.isArray(field.validation?.options)) {
+        return `<select ${common}>${field.validation.options.map((option) => `<option value="${escapeHtml(option)}" ${value === option ? "selected" : ""}>${escapeHtml(option)}</option>`).join("")}</select>`;
+      }
+      if (field.type === "number" || field.type === "integer") {
+        const step = field.type === "integer" ? "1" : "0.01";
+        return `<input type="number" step="${step}" value="${escapeHtml(value ?? "")}" ${common} />`;
+      }
+      if (field.type === "numberArray") {
+        const text = Array.isArray(value) ? value.join(",") : "";
+        return `<input type="text" value="${escapeHtml(text)}" placeholder="-10,-15,-20,-25" data-kind="numberArray" ${common} />`;
+      }
+      if (field.type === "object" || field.type === "objectArray") {
+        return `<textarea spellcheck="false" data-kind="json" ${common}>${escapeHtml(formatJson(value, true))}</textarea>`;
+      }
+      const inputType = field.props?.type === "password" ? "password" : "text";
+      return `<input type="${inputType}" value="${escapeHtml(value ?? "")}" ${common} />`;
+    }
+
+    function renderGroups() {
+      if (!state.settings) return "";
+      const validation = localValidation();
+      const groups = (state.schema.groups || []).filter((g) => g && g.hidden !== true);
+      const nsdkVisibleKeys = new Set(["nsdk.dailyChecks", "nsdk.otcDcaCnyPerWorkday"]);
+      const visibleFields = (group) => {
+        const fields = (group.fields || []).filter((field) => field && field.hidden !== true);
+        if (group.id !== "nsdk") return fields;
+        return fields
+          .filter((field) => nsdkVisibleKeys.has(field.key))
+          .sort((a, b) => Number(a.key !== "nsdk.dailyChecks") - Number(b.key !== "nsdk.dailyChecks"));
+      };
+      return `
+        <section>
+          ${groups.map((group) => {
+            const open = state.openedGroups.has(group.id);
+            const fields = visibleFields(group);
+            return `
+              <details class="group" data-group="${escapeHtml(group.id)}" ${open ? "open" : ""}>
+                <summary>
+                  <span>${escapeHtml(group.titleZh)}<span class="summary-sub">${escapeHtml(group.titleEn)}</span></span>
+                  <span class="summary-mark">${open ? "−" : "+"}</span>
+                </summary>
+                <div class="group-grid">
+                  ${fields.map((field) => {
+                    const errors = validation.fieldErrors?.[field.key] || [];
+                    return `
+                      <div class="field">
+                        <div class="field-head">
+                          <div class="field-name">
+                            <div class="field-zh">${escapeHtml(field.nameZh)}</div>
+                            <div class="field-en">${escapeHtml(field.nameEn)}</div>
+                          </div>
+                          <div class="field-key">${escapeHtml(field.key)}</div>
+                        </div>
+                        ${renderFieldControl(field)}
+                        <div class="field-desc">${escapeHtml(field.description)}</div>
+                        ${errors.length ? `<div class="field-errors">${errors.map((e) => `<span class="tag danger">${escapeHtml(e)}</span>`).join("")}</div>` : ""}
+                      </div>
+                    `;
+                  }).join("")}
+                </div>
+              </details>
+            `;
+          }).join("")}
+        </section>
+      `;
+    }
+
+    function renderGithubModal() {
+      if (!state.githubSaveOpen) return "";
+      return `
+        <div class="modal-backdrop" data-action="modal-backdrop">
+          <div class="modal" role="dialog" aria-modal="true" aria-labelledby="githubTitle">
+            <div class="modal-head">
+              <h2 id="githubTitle" class="modal-title">保存到 GitHub 仓库</h2>
+              <button class="btn" data-action="close-github" aria-label="关闭">关闭</button>
+            </div>
+            <div class="dialog-grid">
+              <div class="form-item"><label for="githubOwner">Repo Owner</label><input id="githubOwner" data-pref="githubRepoOwner" value="${escapeHtml(state.githubRepoOwner)}" placeholder="qq1446039171" readonly /></div>
+              <div class="form-item"><label for="githubRepo">Repo Name</label><input id="githubRepo" data-pref="githubRepoName" value="${escapeHtml(state.githubRepoName)}" placeholder="New-NASDAQ" readonly /></div>
+              <div class="form-item"><label for="githubBranch">Target Branch</label><input id="githubBranch" data-pref="githubBranch" value="${escapeHtml(state.githubBranch)}" placeholder="master" readonly /></div>
+              <div class="form-item"><label for="githubToken">GitHub Personal Access Token</label><input id="githubToken" data-pref="githubToken" type="password" value="${escapeHtml(state.githubToken)}" placeholder="需要 workflow 权限" /></div>
+              <div class="form-item" style="grid-column:1/-1"><label for="githubCommit">Commit Message</label><input id="githubCommit" data-pref="githubCommitMessage" value="${escapeHtml(state.githubCommitMessage)}" placeholder="chore(config): update settings from web" /></div>
+            </div>
+            ${renderNotice("此操作会调用 GitHub Actions workflow_dispatch，把当前 settings.json 写入仓库 Config/settings.json。", "info")}
+            <div class="modal-foot">
+              <button class="btn" data-action="close-github">取消</button>
+              <button class="btn primary" data-action="dispatch-github" ${state.githubSaving ? "disabled" : ""}>${state.githubSaving ? "提交中..." : "提交到仓库"}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAdjustModal() {
+      if (!state.adjustOpen) return "";
+      const previewInvested = Math.max(0, nasdaqInvestedAmount() + (Number(state.addNasdaqInvestDelta) || 0));
+      const previewReserve = Math.max(0, nasdaqReserveCashAmount() + (Number(state.addReserveDelta) || 0));
+      const previewOther = Math.max(0, otherCashAmount() + (Number(state.addDepositDelta) || 0) + (Number(state.addOtherCashDelta) || 0));
+      const previewDeposit = previewInvested + previewReserve + previewOther;
+      const canApply = (Number(state.addDepositDelta) || 0) !== 0 || (Number(state.addNasdaqInvestDelta) || 0) !== 0 || (Number(state.addReserveDelta) || 0) !== 0 || (Number(state.addOtherCashDelta) || 0) !== 0;
+      return `
+        <div class="modal-backdrop" data-action="modal-backdrop">
+          <div class="modal" role="dialog" aria-modal="true" aria-labelledby="adjustTitle">
+            <div class="modal-head">
+              <h2 id="adjustTitle" class="modal-title">账户金额调整</h2>
+              <button class="btn" data-action="close-adjust" aria-label="关闭">关闭</button>
+            </div>
+            <div class="dialog-grid">
+              <div class="form-item">
+                <label for="addDeposit">总资产变动</label>
+                <input id="addDeposit" type="number" step="1000" min="${escapeHtml(-otherCashAmount())}" data-adjust="addDepositDelta" value="${escapeHtml(state.addDepositDelta)}" />
+                <div class="field-desc">总资产变动会自动计入其他现金，保持三账户汇总闭环。</div>
+              </div>
+              <div class="form-item">
+                <label for="addInvest">纳指持仓变动</label>
+                <input id="addInvest" type="number" step="1000" min="${escapeHtml(-nasdaqInvestedAmount())}" data-adjust="addNasdaqInvestDelta" value="${escapeHtml(state.addNasdaqInvestDelta)}" />
+                <div id="investPreview" class="field-desc">当前：¥${escapeHtml(fmtMoney(nasdaqInvestedAmount()))} · 新值：¥${escapeHtml(fmtMoney(previewInvested))}</div>
+              </div>
+              <div class="form-item">
+                <label for="addReserve">备用金变动</label>
+                <input id="addReserve" type="number" step="1000" min="${escapeHtml(-nasdaqReserveCashAmount())}" data-adjust="addReserveDelta" value="${escapeHtml(state.addReserveDelta)}" />
+                <div id="reservePreview" class="field-desc">当前：¥${escapeHtml(fmtMoney(nasdaqReserveCashAmount()))} · 新值：¥${escapeHtml(fmtMoney(previewReserve))}</div>
+              </div>
+              <div class="form-item">
+                <label for="addOtherCash">其他现金变动</label>
+                <input id="addOtherCash" type="number" step="1000" min="${escapeHtml(-otherCashAmount())}" data-adjust="addOtherCashDelta" value="${escapeHtml(state.addOtherCashDelta)}" />
+                <div id="otherPreview" class="field-desc">当前：¥${escapeHtml(fmtMoney(otherCashAmount()))} · 新值：¥${escapeHtml(fmtMoney(previewOther))}</div>
+              </div>
+              <div class="form-item">
+                <label>总资产预览</label>
+                <div id="depositPreview" class="field-desc">当前：¥${escapeHtml(fmtMoney(depositAmount()))} · 新值：¥${escapeHtml(fmtMoney(previewDeposit))}</div>
+              </div>
+            </div>
+            <div class="modal-foot">
+              <button class="btn" data-action="close-adjust">取消</button>
+              <button id="applyAdjustBtn" class="btn primary" data-action="apply-adjust" ${canApply ? "" : "disabled"}>确定</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderVersionsDrawer() {
+      if (!state.versionsOpen) return "";
+      const stored = loadStoredState();
+      const versions = stored.versions || [];
+      const logs = stored.logs || [];
+      return `
+        <div class="drawer-backdrop">
+          <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="versionsTitle">
+            <div class="section-head">
+              <h2 id="versionsTitle" class="section-title">版本 / 对比 / 操作日志</h2>
+              <button class="btn" data-action="close-versions">关闭</button>
+            </div>
+            <div class="drawer-section">
+              <h3 class="section-title">版本列表</h3>
+              ${versions.length ? `
+                <table class="data-table"><thead><tr><th>版本ID</th><th>时间</th><th>原因</th><th>操作</th></tr></thead><tbody>
+                  ${versions.map((v) => `<tr><td>${escapeHtml(v.id)}</td><td>${escapeHtml(v.savedAt)}</td><td>${escapeHtml(v.reason || "")}</td><td><button class="btn" data-action="compare-version" data-version="${escapeHtml(v.id)}">对比</button> <button class="btn primary" data-action="rollback-version" data-version="${escapeHtml(v.id)}">回滚</button></td></tr>`).join("")}
+                </tbody></table>
+              ` : '<div class="empty">暂无版本快照</div>'}
+            </div>
+            <div class="drawer-section">
+              <h3 class="section-title">差异</h3>
+              ${state.diffChanges.length ? `
+                <table class="data-table"><thead><tr><th>字段</th><th>from</th><th>to</th></tr></thead><tbody>
+                  ${state.diffChanges.map((row) => `<tr><td>${escapeHtml(row.key)}</td><td><pre class="json-cell">${escapeHtml(formatJson(row.from, true))}</pre></td><td><pre class="json-cell">${escapeHtml(formatJson(row.to, true))}</pre></td></tr>`).join("")}
+                </tbody></table>
+              ` : '<div class="empty">选择一个版本后显示差异</div>'}
+            </div>
+            <div class="drawer-section">
+              <h3 class="section-title">操作日志</h3>
+              ${logs.length ? `
+                <table class="data-table"><thead><tr><th>时间</th><th>动作</th><th>成功</th><th>大小</th><th>原因</th></tr></thead><tbody>
+                  ${logs.map((log) => `<tr><td>${escapeHtml(log.at)}</td><td>${escapeHtml(log.action)}</td><td>${escapeHtml(log.ok)}</td><td>${escapeHtml(log.bytes ?? 0)}</td><td>${escapeHtml(log.reason || "")}</td></tr>`).join("")}
+                </tbody></table>
+              ` : '<div class="empty">暂无日志</div>'}
+            </div>
+          </aside>
+        </div>
+      `;
+    }
+
+    function render() {
+      syncDerived();
+      app.innerHTML = `
+        <div class="container">
+          <header class="header">
+            <div>
+              <div class="eyebrow">NSDK Config Console</div>
+              <h1>NSDK 参数配置</h1>
+              <div class="subtitle">单文件 HTML 版，保留配置加载、校验、资产概览、回撤档位、state.json 查看和 GitHub workflow 保存能力。</div>
+            </div>
+            <div class="status">${renderStatus()}</div>
+          </header>
+          ${renderNotice(state.fileMessage, state.fileMessageType)}
+          ${renderActions()}
+          ${renderAssetSection()}
+          ${state.settings && drawdownSnapshotActive() ? `
+            <section class="section">
+              <div class="section-head">
+                <h2 class="section-title">回撤档位执行状态</h2>
+                <div class="meta"><span>用于控制 levelsPercent 各档位是否已执行</span></div>
+              </div>
+              ${renderDrawdownTable(settingsDrawdownRows())}
+            </section>
+          ` : ""}
+          ${renderStateSection()}
+          ${renderOverview()}
+          ${renderGroups()}
+        </div>
+        ${renderGithubModal()}
+        ${renderAdjustModal()}
+        ${renderVersionsDrawer()}
+      `;
+    }
+
+    async function handleSettingsFile(file, handle = null) {
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        state.fileHandle = handle;
+        state.fileName = file.name || handle?.name || "";
+        state.settings = normalizeBySchema(state.schema, json);
+        syncDerived();
+        state.loadedSettings = cloneValue(state.settings);
+        state.fileStatus = "loaded";
+        state.fileMessageType = "success";
+        state.fileMessage = "文件加载成功";
+        await addVersionSnapshot("openFile");
+        await addLog({ action: "open", ok: true, reason: "", bytes: text.length });
+      } catch (error) {
+        state.fileStatus = "error";
+        state.fileMessageType = "error";
+        state.fileMessage = `打开失败：${error?.message || String(error)}`;
+        await addLog({ action: "open", ok: false, reason: state.fileMessage, bytes: 0 });
+      }
+      render();
+      if (state.fileStatus === "loaded" && hasPortfolioAssets()) await refreshAssetPrices();
+    }
+
+    async function openFile() {
+      state.fileMessage = "";
+      if (window.showOpenFilePicker) {
+        try {
+          const picker = await window.showOpenFilePicker({ multiple: false, types: [{ description: "JSON", accept: { "application/json": [".json"] } }] });
+          const handle = picker?.[0];
+          if (!handle) return;
+          await handleSettingsFile(await handle.getFile(), handle);
+          return;
+        } catch (error) {
+          if (error?.name === "AbortError") return;
+          state.fileStatus = "error";
+          state.fileMessageType = "error";
+          state.fileMessage = `打开失败：${error?.message || String(error)}`;
+          render();
+          return;
+        }
+      }
+      settingsFileInput.click();
+    }
+
+    async function writeToHandle(handle, text) {
+      const writable = await handle.createWritable();
+      await writable.write(text);
+      await writable.close();
+    }
+
+    async function saveToFile() {
+      state.saveMessage = "";
+      if (!state.fileHandle) {
+        state.fileMessageType = "warning";
+        state.fileMessage = "当前浏览器未提供原文件写入权限，请使用“另存为”或“导出”。";
+        render();
+        return;
+      }
+      if (!confirm("将覆盖写入本地 JSON 文件，确认保存？")) return;
+      try {
+        const next = cloneValue(state.settings);
+        const version = Number(next?.meta?.configVersion) || 1;
+        next.meta = next.meta || {};
+        next.meta.configVersion = dirty() ? version + 1 : version;
+        next.meta.lastSavedAt = nowIso();
+        const raw = JSON.stringify(next, null, 2);
+        await writeToHandle(state.fileHandle, raw);
+        state.settings = normalizeBySchema(state.schema, next);
+        syncDerived();
+        state.loadedSettings = cloneValue(state.settings);
+        state.fileStatus = "saved";
+        state.fileMessageType = "success";
+        state.fileMessage = "保存成功";
+        state.saveMessageType = "success";
+        state.saveMessage = "保存成功";
+        await addVersionSnapshot("save");
+        await addLog({ action: "save", ok: true, reason: "", bytes: raw.length });
+      } catch (error) {
+        state.fileStatus = "error";
+        state.fileMessageType = "error";
+        state.fileMessage = `保存失败：${error?.message || String(error)}`;
+        state.saveMessageType = "error";
+        state.saveMessage = state.fileMessage;
+        await addLog({ action: "save", ok: false, reason: state.fileMessage, bytes: 0 });
+      }
+      render();
+    }
+
+    async function saveAs() {
+      if (!state.settings) return;
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({ suggestedName: "settings.json", types: [{ description: "JSON", accept: { "application/json": [".json"] } }] });
+          state.fileHandle = handle;
+          state.fileName = handle.name || "settings.json";
+          await saveToFile();
+          return;
+        } catch (error) {
+          if (error?.name === "AbortError") return;
+          state.fileMessageType = "warning";
+          state.fileMessage = `另存为已取消：${error?.message || String(error)}`;
+          render();
+          return;
+        }
+      }
+      await exportJson();
+    }
+
+    async function exportJson() {
+      if (!state.settings) return;
+      const raw = JSON.stringify(state.settings, null, 2);
+      const blob = new Blob([raw], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = state.fileName && state.fileName.endsWith(".json") ? state.fileName : "settings.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      await addLog({ action: "export", ok: true, reason: "", bytes: raw.length });
+    }
+
+    function resetToLoaded() {
+      state.settings = cloneValue(state.loadedSettings);
+      state.saveMessage = "";
+      render();
+    }
+
+    async function resetDefaults() {
+      if (!confirm("将恢复默认值，确认？")) return;
+      state.settings = normalizeBySchema(state.schema, {});
+      syncDerived();
+      state.loadedSettings = cloneValue(state.settings);
+      state.saveMessageType = "success";
+      state.saveMessage = "已恢复默认（尚未写入文件，点击保存或导出后生效）";
+      await addLog({ action: "resetDefaults", ok: true, reason: "", bytes: 0 });
+      render();
+    }
+
+    async function handleStateFile(file, handle = null) {
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        state.stateFileHandle = handle;
+        state.stateFileName = file.name || handle?.name || "";
+        state.nsdkState = normalizeNsdkState(json);
+        state.loadedNsdkState = cloneValue(state.nsdkState);
+        state.stateFileStatus = "loaded";
+        state.stateMessageType = "success";
+        state.stateMessage = "state.json 加载成功";
+        await addLog({ action: "stateOpen", ok: true, reason: "", bytes: text.length });
+      } catch (error) {
+        state.stateFileStatus = "error";
+        state.stateMessageType = "error";
+        state.stateMessage = `打开 state.json 失败：${error?.message || String(error)}`;
+        await addLog({ action: "stateOpen", ok: false, reason: state.stateMessage, bytes: 0 });
+      }
+      render();
+    }
+
+    async function openStateFile() {
+      state.stateMessage = "";
+      if (window.showOpenFilePicker) {
+        try {
+          const picker = await window.showOpenFilePicker({ multiple: false, types: [{ description: "JSON", accept: { "application/json": [".json"] } }] });
+          const handle = picker?.[0];
+          if (!handle) return;
+          await handleStateFile(await handle.getFile(), handle);
+          return;
+        } catch (error) {
+          if (error?.name === "AbortError") return;
+          state.stateMessageType = "error";
+          state.stateMessage = `打开 state.json 失败：${error?.message || String(error)}`;
+          render();
+          return;
+        }
+      }
+      stateFileInput.click();
+    }
+
+    async function saveStateToFile() {
+      if (!state.stateFileHandle) {
+        state.stateMessageType = "warning";
+        state.stateMessage = "当前浏览器未提供 state.json 原文件写入权限，请使用“另存 state.json”。";
+        render();
+        return;
+      }
+      if (!confirm("将覆盖写入本地 state.json 文件，确认保存？")) return;
+      try {
+        const raw = JSON.stringify(state.nsdkState, null, 2);
+        await writeToHandle(state.stateFileHandle, raw);
+        state.nsdkState = normalizeNsdkState(state.nsdkState);
+        state.loadedNsdkState = cloneValue(state.nsdkState);
+        state.stateFileStatus = "saved";
+        state.stateMessageType = "success";
+        state.stateMessage = "state.json 保存成功";
+        await addLog({ action: "stateSave", ok: true, reason: "", bytes: raw.length });
+      } catch (error) {
+        state.stateFileStatus = "error";
+        state.stateMessageType = "error";
+        state.stateMessage = `保存 state.json 失败：${error?.message || String(error)}`;
+        await addLog({ action: "stateSave", ok: false, reason: state.stateMessage, bytes: 0 });
+      }
+      render();
+    }
+
+    async function saveStateAs() {
+      if (!state.nsdkState) return;
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({ suggestedName: "state.json", types: [{ description: "JSON", accept: { "application/json": [".json"] } }] });
+          state.stateFileHandle = handle;
+          state.stateFileName = handle.name || "state.json";
+          await saveStateToFile();
+          return;
+        } catch (error) {
+          if (error?.name === "AbortError") return;
+          state.stateMessageType = "warning";
+          state.stateMessage = `state.json 另存为已取消：${error?.message || String(error)}`;
+          render();
+          return;
+        }
+      }
+      const raw = JSON.stringify(state.nsdkState, null, 2);
+      const blob = new Blob([raw], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "state.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function resetStateToLoaded() {
+      state.nsdkState = cloneValue(state.loadedNsdkState);
+      state.stateMessage = "";
+      render();
+    }
+
+    function encodeUtf8Base64(text) {
+      return btoa(unescape(encodeURIComponent(text)));
+    }
+
+    async function dispatchGithubSave() {
+      if (!state.settings) return;
+      enforceProjectGithubTarget();
+      persistGithubPrefs();
+      if (!state.githubRepoOwner.trim() || !state.githubRepoName.trim() || !state.githubBranch.trim() || !state.githubToken.trim()) {
+        state.saveMessageType = "error";
+        state.saveMessage = "请完整填写 owner、repo、branch 和 token。";
+        render();
+        return;
+      }
+      state.githubSaving = true;
+      render();
+      try {
+        const payload = {
+          ref: state.githubBranch.trim(),
+          inputs: {
+            settings_base64: encodeUtf8Base64(JSON.stringify(state.settings)),
+            commit_message: state.githubCommitMessage.trim() || "chore(config): update settings from web"
+          }
+        };
+        const url = `https://api.github.com/repos/${state.githubRepoOwner.trim()}/${state.githubRepoName.trim()}/actions/workflows/save-settings.yml/dispatches`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            Accept: "application/vnd.github+json",
+            Authorization: `Bearer ${state.githubToken.trim()}`,
+            "X-GitHub-Api-Version": "2022-11-28",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`GitHub API ${res.status}: ${text || "dispatch_failed"}`);
+        }
+        state.saveMessageType = "success";
+        state.saveMessage = "已触发保存到仓库 workflow，请在 GitHub Actions 中查看执行结果。";
+        state.githubSaveOpen = false;
+        await addLog({ action: "githubSaveDispatch", ok: true, reason: "", bytes: JSON.stringify(payload).length });
+      } catch (error) {
+        state.saveMessageType = "error";
+        state.saveMessage = `保存到 GitHub 失败：${error?.message || String(error)}`;
+        await addLog({ action: "githubSaveDispatch", ok: false, reason: state.saveMessage, bytes: 0 });
+      } finally {
+        state.githubSaving = false;
+        render();
+      }
+    }
+
+    function compareWith(versionId) {
+      const stored = loadStoredState();
+      const found = (stored.versions || []).find((v) => v.id === versionId);
+      if (!found) return;
+      const from = normalizeBySchema(state.schema, found.settings);
+      const to = state.settings;
+      const changes = [];
+      for (const group of state.schema.groups || []) {
+        for (const field of group.fields || []) {
+          const a = deepGet(from, field.key);
+          const b = deepGet(to, field.key);
+          if (JSON.stringify(a) !== JSON.stringify(b)) changes.push({ key: field.key, from: a, to: b });
+        }
+      }
+      state.diffChanges = changes;
+      render();
+    }
+
+    async function rollbackTo(versionId) {
+      if (!confirm("将回滚到该历史版本，确认？")) return;
+      const stored = loadStoredState();
+      const found = (stored.versions || []).find((v) => v.id === versionId);
+      if (!found) return;
+      state.settings = normalizeBySchema(state.schema, found.settings);
+      syncDerived();
+      state.loadedSettings = cloneValue(state.settings);
+      state.saveMessageType = "success";
+      state.saveMessage = "已回滚到历史版本（点击保存或导出后写入文件）";
+      await addLog({ action: "rollback", ok: true, reason: versionId, bytes: 0 });
+      render();
+    }
+
+    function commitField(element) {
+      const key = element.dataset.field;
+      if (!key || !state.settings) return;
+      const field = findField(key);
+      if (!field || field.editable === false) return;
+      let value;
+      if (field.type === "boolean") {
+        value = element.checked;
+      } else if (field.type === "number" || field.type === "integer") {
+        const n = Number(element.value);
+        value = Number.isFinite(n) ? (field.type === "integer" ? Math.round(n) : n) : element.value;
+      } else if (field.type === "numberArray") {
+        value = String(element.value || "")
+          .split(/[,，\s]+/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map(Number)
+          .filter(Number.isFinite);
+      } else if (field.type === "object" || field.type === "objectArray") {
+        try {
+          value = element.value.trim() ? JSON.parse(element.value) : null;
+        } catch (error) {
+          const old = element.parentElement.querySelector(".json-error");
+          if (old) old.remove();
+          element.insertAdjacentHTML("afterend", `<div class="json-error">${escapeHtml(error?.message || "JSON 解析失败")}</div>`);
+          return;
+        }
+      } else {
+        value = element.value;
+      }
+      deepSet(state.settings, key, value);
+      syncDerived();
+      render();
+    }
+
+    function applyAdjust() {
+      const previewInvested = Math.max(0, nasdaqInvestedAmount() + (Number(state.addNasdaqInvestDelta) || 0));
+      const previewReserve = Math.max(0, nasdaqReserveCashAmount() + (Number(state.addReserveDelta) || 0));
+      const previewOther = Math.max(0, otherCashAmount() + (Number(state.addDepositDelta) || 0) + (Number(state.addOtherCashDelta) || 0));
+      deepSet(state.settings, "portfolio.investedNasdaqCny", Math.round(previewInvested * 100) / 100);
+      deepSet(state.settings, "portfolio.reserveCashNasdaqCny", Math.round(previewReserve * 100) / 100);
+      deepSet(state.settings, "portfolio.otherCashCny", Math.round(previewOther * 100) / 100);
+      state.adjustOpen = false;
+      syncDerived();
+      render();
+    }
+
+    function updateAdjustPreview() {
+      const previewInvested = Math.max(0, nasdaqInvestedAmount() + (Number(state.addNasdaqInvestDelta) || 0));
+      const previewReserve = Math.max(0, nasdaqReserveCashAmount() + (Number(state.addReserveDelta) || 0));
+      const previewOther = Math.max(0, otherCashAmount() + (Number(state.addDepositDelta) || 0) + (Number(state.addOtherCashDelta) || 0));
+      const previewDeposit = previewInvested + previewReserve + previewOther;
+      const depositPreview = document.getElementById("depositPreview");
+      const investPreview = document.getElementById("investPreview");
+      const reservePreview = document.getElementById("reservePreview");
+      const otherPreview = document.getElementById("otherPreview");
+      const applyBtn = document.getElementById("applyAdjustBtn");
+      if (depositPreview) depositPreview.textContent = `当前：¥${fmtMoney(depositAmount())} · 新值：¥${fmtMoney(previewDeposit)}`;
+      if (investPreview) investPreview.textContent = `当前：¥${fmtMoney(nasdaqInvestedAmount())} · 新值：¥${fmtMoney(previewInvested)}`;
+      if (reservePreview) reservePreview.textContent = `当前：¥${fmtMoney(nasdaqReserveCashAmount())} · 新值：¥${fmtMoney(previewReserve)}`;
+      if (otherPreview) otherPreview.textContent = `当前：¥${fmtMoney(otherCashAmount())} · 新值：¥${fmtMoney(previewOther)}`;
+      if (applyBtn) applyBtn.disabled = !((Number(state.addDepositDelta) || 0) !== 0 || (Number(state.addNasdaqInvestDelta) || 0) !== 0 || (Number(state.addReserveDelta) || 0) !== 0 || (Number(state.addOtherCashDelta) || 0) !== 0);
+    }
+
+    function addAsset() {
+      if (!state.settings) return;
+      const assets = portfolioAssets();
+      assets.push(normalizeAsset({
+        id: `asset-${Date.now()}`,
+        name: "新资产",
+        category: "nasdaq",
+        kind: "exchange",
+        code: "",
+        secid: "",
+        shares: 0,
+        amountCny: 0,
+        lastPrice: 0,
+        enabled: true
+      }, assets.length));
+      state.settings.portfolio.assets = assets;
+      syncDerived();
+      render();
+    }
+
+    function deleteAsset(index) {
+      if (!state.settings) return;
+      const assets = portfolioAssets();
+      assets.splice(index, 1);
+      state.settings.portfolio.assets = assets;
+      syncDerived();
+      render();
+    }
+
+    function commitAssetField(element, options = {}) {
+      const index = Number(element.dataset.assetIndex);
+      const field = element.dataset.assetField;
+      const assets = portfolioAssets();
+      if (!Number.isInteger(index) || !field || !assets[index]) return;
+      const old = JSON.stringify(assets[index]);
+      let value = element.value;
+      if (field === "shares" || field === "amountCny") value = Math.max(0, Number(value) || 0);
+      if (field === "enabled") value = Boolean(element.checked);
+      assets[index][field] = value;
+      if (field === "code") {
+        assets[index].secid = inferSecid(value);
+        assets[index].lastPrice = 0;
+        assets[index].lastPriceAt = "";
+      }
+      if (field === "shares") {
+        assets[index].shares = value;
+      }
+      if (field === "kind" && value === "cash") {
+        assets[index].code = "";
+        assets[index].secid = "";
+        assets[index].shares = 0;
+        assets[index].lastPrice = 0;
+      }
+      state.settings.portfolio.assets = assets.map(normalizeAsset);
+      syncDerived();
+      const shouldRender = options.render !== false && JSON.stringify(assets[index]) !== old;
+      if (shouldRender) render();
+    }
+
+    app.addEventListener("click", async (event) => {
+      const target = event.target.closest("[data-action]");
+      if (!target) return;
+      const action = target.dataset.action;
+      if (action === "modal-backdrop" && event.target !== target) return;
+      if (action === "open-file") await openFile();
+      else if (action === "save-file") await saveToFile();
+      else if (action === "save-as") await saveAs();
+      else if (action === "reset-loaded") resetToLoaded();
+      else if (action === "reset-defaults") await resetDefaults();
+      else if (action === "export-json") await exportJson();
+      else if (action === "open-github") { state.githubSaveOpen = true; render(); }
+      else if (action === "close-github" || action === "modal-backdrop") { state.githubSaveOpen = false; state.adjustOpen = false; render(); }
+      else if (action === "dispatch-github") await dispatchGithubSave();
+      else if (action === "open-adjust") { state.addDepositDelta = 0; state.addNasdaqInvestDelta = 0; state.addReserveDelta = 0; state.addOtherCashDelta = 0; state.adjustOpen = true; render(); }
+      else if (action === "close-adjust") { state.adjustOpen = false; render(); }
+      else if (action === "apply-adjust") applyAdjust();
+      else if (action === "add-asset") addAsset();
+      else if (action === "delete-asset") deleteAsset(Number(target.dataset.assetIndex));
+      else if (action === "refresh-assets") await refreshAssetPrices();
+      else if (action === "open-state-file") await openStateFile();
+      else if (action === "save-state") await saveStateToFile();
+      else if (action === "save-state-as") await saveStateAs();
+      else if (action === "reset-state") resetStateToLoaded();
+      else if (action === "open-versions") { state.versionsOpen = true; state.diffChanges = []; render(); }
+      else if (action === "close-versions") { state.versionsOpen = false; render(); }
+      else if (action === "compare-version") compareWith(target.dataset.version);
+      else if (action === "rollback-version") await rollbackTo(target.dataset.version);
+    });
+
+    app.addEventListener("change", (event) => {
+      const el = event.target;
+      if (el.matches("[data-action='tier-toggle']")) {
+        setTierExecuted(el.dataset.tier, el.checked);
+        return;
+      }
+      if (el.matches("[data-asset-field]")) {
+        commitAssetField(el, { render: true });
+        return;
+      }
+      if (el.matches("[data-field]") && (el.type === "checkbox" || el.tagName === "SELECT")) commitField(el);
+    });
+
+    app.addEventListener("focusout", (event) => {
+      const el = event.target;
+      if (el.matches("[data-asset-field]")) {
+        commitAssetField(el, { render: false });
+        return;
+      }
+      if (el.matches("[data-field]") && !["checkbox", "select-one"].includes(el.type)) commitField(el);
+    });
+
+    app.addEventListener("input", (event) => {
+      const el = event.target;
+      if (el.matches("[data-asset-field]")) {
+        commitAssetField(el, { render: false });
+      } else if (el.matches("[data-pref]")) {
+        state[el.dataset.pref] = el.value;
+        persistGithubPrefs();
+      } else if (el.matches("[data-adjust]")) {
+        state[el.dataset.adjust] = Number(el.value) || 0;
+        updateAdjustPreview();
+      }
+    });
+
+    app.addEventListener("toggle", (event) => {
+      const el = event.target;
+      if (!el.matches("details[data-group]")) return;
+      if (el.open) state.openedGroups.add(el.dataset.group);
+      else state.openedGroups.delete(el.dataset.group);
+    }, true);
+
+    settingsFileInput.addEventListener("change", async () => {
+      await handleSettingsFile(settingsFileInput.files?.[0] || null, null);
+      settingsFileInput.value = "";
+    });
+
+    stateFileInput.addEventListener("change", async () => {
+      await handleStateFile(stateFileInput.files?.[0] || null, null);
+      stateFileInput.value = "";
+    });
+
+    (async function init() {
+      const stored = loadStoredState();
+      const prefs = stored.githubPrefs || {};
+      state.githubRepoOwner = prefs.owner || projectGithub.owner;
+      state.githubRepoName = prefs.repo || projectGithub.repo;
+      state.githubBranch = prefs.branch || projectGithub.branch;
+      enforceProjectGithubTarget();
+      persistGithubPrefs();
+      state.githubCommitMessage = prefs.commitMessage || "chore(config): update settings from web";
+      loadDefaults();
+      render();
+      await tryAutoLoadSettings();
+    })();
+  </script>
+</body>
+</html>

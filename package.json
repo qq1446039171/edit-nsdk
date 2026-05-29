@@ -1,0 +1,22 @@
+{
+  "name": "tz-nsdk-configurator",
+  "private": true,
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "scripts": {
+    "dev": "npm run app:start",
+    "build": "echo \"web is static HTML; no build step required\"",
+    "build:pages": "echo \"web is static HTML; no build step required\"",
+    "test": "npm --prefix app/nsdk test",
+    "app:start": "npm --prefix app/nsdk run start",
+    "app:restart": "npm --prefix app/nsdk run restart",
+    "app:run-once-local": "npm run app:run-once -- once",
+    "app:run-once": "npm --prefix app/nsdk run once",
+    "app:selftest": "npm --prefix app/nsdk run selftest",
+    "app:refresh": "npm --prefix app/nsdk run refresh"
+  },
+  "dependencies": {
+    "aw-github": "^1.0.0"
+  }
+}

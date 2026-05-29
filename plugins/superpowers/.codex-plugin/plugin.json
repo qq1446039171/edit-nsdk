@@ -1,0 +1,38 @@
+{
+  "name": "superpowers",
+  "version": "0.1.0",
+  "description": "[TODO: Brief plugin description]",
+  "author": {
+    "name": "[TODO: Author Name]",
+    "email": "[TODO: author@example.com]",
+    "url": "[TODO: https://github.com/author]"
+  },
+  "homepage": "[TODO: https://docs.example.com/plugin]",
+  "repository": "[TODO: https://github.com/author/plugin]",
+  "license": "MIT",
+  "keywords": [],
+  "skills": "./skills/",
+  "hooks": "./hooks.json",
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json",
+  "interface": {
+    "displayName": "Superpowers",
+    "shortDescription": "[TODO: Short description for subtitle]",
+    "longDescription": "[TODO: Long description for details page]",
+    "developerName": "[TODO: Developer Name]",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Write"],
+    "websiteURL": "[TODO: https://example.com/]",
+    "privacyPolicyURL": "[TODO: https://example.com/privacy]",
+    "termsOfServiceURL": "[TODO: https://example.com/terms]",
+    "defaultPrompt": [
+      "[TODO: Starter prompt 1]",
+      "[TODO: Starter prompt 2]",
+      "[TODO: Starter prompt 3]"
+    ],
+    "brandColor": "#3B82F6",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png",
+    "screenshots": []
+  }
+}

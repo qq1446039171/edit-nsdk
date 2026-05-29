@@ -1,0 +1,111 @@
+{
+  "funds": {
+    "depositAmount": 200001,
+    "nasdaqExposureLimitPercent": 70
+  },
+  "allocation": {
+    "fixedAllocationEnabled": true,
+    "boughtTargetPercent": 40,
+    "reserveCashTargetPercent": 30,
+    "otherCashTargetPercent": 30,
+    "monthlyCashflowCny": 4000
+  },
+  "portfolio": {
+    "assets": [
+      {
+        "id": "513100",
+        "name": "纳指ETF",
+        "category": "nasdaq",
+        "kind": "exchange",
+        "code": "513100",
+        "secid": "1.513100",
+        "shares": 34085.47,
+        "amountCny": 0,
+        "lastPrice": 1.907,
+        "lastPriceAt": "2026-04-26T15:32:41.495Z",
+        "enabled": true
+      },
+      {
+        "id": "alipay-nasdaq-reserve",
+        "name": "支付宝纳指回撤备用金",
+        "category": "nasdaq_reserve_cash",
+        "kind": "cash",
+        "code": "",
+        "secid": "",
+        "shares": 0,
+        "amountCny": 60000,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "regular-cash",
+        "name": "普通现金",
+        "category": "cash",
+        "kind": "cash",
+        "code": "",
+        "secid": "",
+        "shares": 0,
+        "amountCny": 75000,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      }
+    ],
+    "investedNasdaqCny": 65001,
+    "reserveCashNasdaqCny": 60000,
+    "reserveUsedNasdaqCny": 0,
+    "otherCashCny": 75000,
+    "fearOfMissingOut": false
+  },
+  "drawdown": {
+    "levelsPercent": [
+      -10,
+      -15,
+      -20,
+      -25
+    ],
+    "executedLevels": {}
+  },
+  "snapshot": {
+    "triggerLevelPercent": -10,
+    "baselineReserveAmount": 0,
+    "lockedAt": "",
+    "cycleId": ""
+  },
+  "nsdk": {
+    "fund": {
+      "code": "513100",
+      "secid": "1.513100",
+      "name": "纳指ETF"
+    },
+    "benchmark": {
+      "provider": "finnhub",
+      "secid": "1.513100",
+      "symbol": "NDX",
+      "name": "纳指100（NDX）"
+    },
+    "finnhub": {
+      "apiKey": "d7953thr01qp0fl778n0d7953thr01qp0fl778ng"
+    },
+    "timezone": "Asia/Shanghai",
+    "logDir": "D:/log-nsdk",
+    "pushEnabled": true,
+    "serverChan": {
+      "sendKey": "SCT311262TCOvXh9AgIsoNeaxuvTJYFkxM"
+    },
+    "startupHeartbeatEnabled": true,
+    "otcDcaCnyPerWorkday": 0,
+    "weeklyActiveBuy": null,
+    "dailyChecks": [
+      {
+        "hour": "10",
+        "minute": "00"
+      },
+      {
+        "hour": "14",
+        "minute": "00"
+      }
+    ]
+  }
+}

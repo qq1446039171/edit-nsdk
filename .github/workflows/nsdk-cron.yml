@@ -1,0 +1,92 @@
+name: NSDK Scheduled Runner
+
+on:
+  schedule:
+    # 实时回撤档位检查：每 5 分钟一次（触发档位时立即推送）
+    - cron: "*/5 * * * *"
+    # 例行状态推送：工作日每 30 分钟一次（Asia/Shanghai = UTC+8）
+    - cron: "*/30 * * * 1-5"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode: market | realtime | weekly | once"
+        required: false
+        default: "market"
+      persist_state:
+        description: "Commit app/nsdk/state.json changes back to repo"
+        required: false
+        default: "true"
+
+permissions:
+  contents: write
+
+jobs:
+  run-nsdk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve run mode
+        id: mode
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            if [ "${{ github.event.schedule }}" = "*/5 * * * *" ]; then
+              echo "mode=realtime" >> "$GITHUB_OUTPUT"
+            else
+              echo "mode=market" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "mode=${{ github.event.inputs.mode || 'market' }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Inject ServerChan SendKey from secret (optional)
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = 'Config/settings.json';
+          const sendKey = process.env.NSDK_SERVERCHAN_SENDKEY;
+          if (!sendKey || !fs.existsSync(path)) process.exit(0);
+          const json = JSON.parse(fs.readFileSync(path, 'utf8'));
+          json.nsdk = json.nsdk || {};
+          json.nsdk.serverChan = json.nsdk.serverChan || {};
+          json.nsdk.serverChan.sendKey = sendKey;
+          fs.writeFileSync(path, JSON.stringify(json, null, 2));
+          NODE
+        env:
+          NSDK_SERVERCHAN_SENDKEY: ${{ secrets.NSDK_SERVERCHAN_SENDKEY }}
+
+      - name: Run NSDK once
+        shell: bash
+        run: |
+          MODE="${{ steps.mode.outputs.mode }}"
+          if [ "$MODE" = "market" ]; then
+            npm --prefix app/nsdk run once
+          else
+            npm --prefix app/nsdk run once -- "$MODE"
+          fi
+
+      - name: Commit state changes
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.persist_state != 'false' }}
+        shell: bash
+        run: |
+          if git diff --quiet -- app/nsdk/state.json Config/settings.json; then
+            echo "No state/config changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/nsdk/state.json Config/settings.json
+          git commit -m "chore(nsdk): persist runtime state [skip ci]"
+          git push

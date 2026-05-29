@@ -1,0 +1,87 @@
+name: Save Config Settings
+
+on:
+  workflow_dispatch:
+    inputs:
+      settings_base64:
+        description: "Base64-encoded settings.json content"
+        required: true
+      commit_message:
+        description: "Commit message"
+        required: false
+        default: "chore(config): update settings from web"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  save-settings:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Decode and write Config/settings.json
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          from pathlib import Path
+
+          b64 = os.environ['INPUT_SETTINGS_BASE64'].strip()
+          raw = base64.b64decode(b64).decode('utf-8')
+          parsed = json.loads(raw)
+          target = Path('Config/settings.json')
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_text(json.dumps(parsed, ensure_ascii=False, indent=2) + "\n", encoding='utf-8')
+          PY
+        env:
+          INPUT_SETTINGS_BASE64: ${{ github.event.inputs.settings_base64 }}
+
+      - name: Commit settings.json
+        shell: bash
+        run: |
+          if git diff --quiet -- Config/settings.json; then
+            echo "No settings changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Config/settings.json
+          git commit -m "${{ github.event.inputs.commit_message }}"
+          git push origin "HEAD:${TARGET_BRANCH}"
+        env:
+          TARGET_BRANCH: ${{ github.ref_name }}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Prepare static site
+        run: |
+          mkdir -p _site/Config
+          cp web/index.html _site/index.html
+          cp Config/settings.json _site/Config/settings.json
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
