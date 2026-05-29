@@ -107,21 +107,21 @@
       "provider": "finnhub",
       "code": "^NDX",
       "name": "纳指100（NDX）",
-      "price": 27287,
-      "pct": 1.9158,
-      "high1y": 27312,
-      "high1yDay": "2026-04-24",
-      "_rawPrice": 663.9,
-      "_rawHigh": 664.51,
-      "drawdownPct": 0.09
+      "price": 30324,
+      "pct": 0.2977,
+      "high1y": 30275,
+      "high1yDay": "2026-05-28",
+      "_rawPrice": 737.79,
+      "_rawHigh": 736.6,
+      "drawdownPct": -0.16
     },
     "buy": {
       "code": "513100",
       "name": "纳指ETF国泰",
-      "price": 1.907,
-      "pct": 10
+      "price": 2.273,
+      "pct": 2.66
     },
-    "at": "2026-04-26T15:32:41.495Z"
+    "at": "2026-05-29T18:39:25.017Z"
   },
   "freeze": {
     "active": false,
