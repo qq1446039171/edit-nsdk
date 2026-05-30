@@ -1,4 +1,5 @@
 name: Save Config Settings
+run-name: Save Config/settings.json to qq1446039171/edit-nsdk
 
 on:
   workflow_dispatch:
@@ -22,6 +23,8 @@ concurrency:
 
 jobs:
   save-settings:
+    env:
+      CONFIG_PATH: Config/settings.json
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -44,7 +47,7 @@ jobs:
           b64 = os.environ['INPUT_SETTINGS_BASE64'].strip()
           raw = base64.b64decode(b64).decode('utf-8')
           parsed = json.loads(raw)
-          target = Path('Config/settings.json')
+          target = Path(os.environ['CONFIG_PATH'])
           target.parent.mkdir(parents=True, exist_ok=True)
           target.write_text(json.dumps(parsed, ensure_ascii=False, indent=2) + "\n", encoding='utf-8')
           PY
@@ -54,13 +57,13 @@ jobs:
       - name: Commit settings.json
         shell: bash
         run: |
-          if git diff --quiet -- Config/settings.json; then
+          if git diff --quiet -- "${CONFIG_PATH}"; then
             echo "No settings changes"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Config/settings.json
+          git add "${CONFIG_PATH}"
           git commit -m "${{ github.event.inputs.commit_message }}"
           git push origin "HEAD:${TARGET_BRANCH}"
         env:
@@ -75,7 +78,7 @@ jobs:
         run: |
           mkdir -p _site/Config
           cp web/index.html _site/index.html
-          cp Config/settings.json _site/Config/settings.json
+          cp "${CONFIG_PATH}" _site/Config/settings.json
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
