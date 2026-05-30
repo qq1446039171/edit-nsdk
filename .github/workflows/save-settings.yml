@@ -69,10 +69,9 @@ jobs:
         env:
           TARGET_BRANCH: ${{ github.ref_name }}
 
+      # Pages must be enabled once in repo Settings -> Pages -> Source: GitHub Actions.
       - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Prepare static site
         run: |

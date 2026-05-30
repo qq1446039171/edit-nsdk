@@ -13,6 +13,7 @@ assert.match(html, /owner:\s*"qq1446039171"/, 'GitHub owner should be qq14460391
 assert.match(html, /repo:\s*"edit-nsdk"/, 'GitHub repo should be edit-nsdk');
 assert.match(workflows, /qq1446039171\/edit-nsdk/, 'workflows should identify the edit-nsdk repo');
 assert.match(workflows, /CONFIG_PATH:\s*Config\/settings\.json/, 'workflows should use Config/settings.json as the config path');
+assert.doesNotMatch(workflows, /enablement:\s*true/, 'workflows should not try to create or enable the Pages site');
 assert.doesNotMatch(html, /New-NASDAQ/, 'web UI should not reference the old New-NASDAQ repo');
 assert.doesNotMatch(workflows, /New-NASDAQ/, 'workflows should not reference the old New-NASDAQ repo');
 
