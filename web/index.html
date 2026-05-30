@@ -321,6 +321,14 @@
       vertical-align: top;
     }
     .data-table tr:hover td { background: rgba(76, 175, 80, 0.05); }
+    .asset-table {
+      table-layout: fixed;
+    }
+    .asset-table input,
+    .asset-table select {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
 
     .switch {
       position: relative;
@@ -621,11 +629,6 @@
       { value: "stock", label: "其他股票/ETF" },
       { value: "cash", label: "普通现金" }
     ];
-    const assetKinds = [
-      { value: "exchange", label: "场内ETF/股票" },
-      { value: "fund", label: "场外基金" },
-      { value: "cash", label: "固定现金" }
-    ];
 
     const app = document.getElementById("app");
     const settingsFileInput = document.getElementById("settingsFileInput");
@@ -906,9 +909,6 @@
       return assetCategories.find((item) => item.value === value)?.label || value || "-";
     }
 
-    function kindLabel(value) {
-      return assetKinds.find((item) => item.value === value)?.label || value || "-";
-    }
 
     function portfolioAssets() {
       const assets = state.settings?.portfolio?.assets;
@@ -929,20 +929,33 @@
       return clean.includes(".") ? clean : "";
     }
 
+    function assetInputMode(category) {
+      return category === "cash" || category === "nasdaq_reserve_cash" ? "cash" : "quoted";
+    }
+
+    function isCashAsset(asset) {
+      return assetInputMode(asset?.category) === "cash";
+    }
+
     function normalizeAsset(asset, index = 0) {
+      const category = asset?.category || "stock";
+      const cash = assetInputMode(category) === "cash";
       const code = String(asset?.code || "").trim();
-      const kind = asset?.kind || (asset?.category === "cash" || asset?.category === "nasdaq_reserve_cash" ? "cash" : "exchange");
+      const kind = cash ? "cash" : (asset?.kind === "fund" ? "fund" : "exchange");
       const id = String(asset?.id || code || `asset-${index + 1}`).trim();
+      const shares = cash ? 0 : Math.max(0, Number(asset?.shares) || 0);
+      const amountCny = cash ? Math.max(0, Number(asset?.amountCny) || 0) : 0;
+      const lastPrice = cash ? 0 : Math.max(0, Number(asset?.lastPrice) || 0);
       return {
         id,
         name: String(asset?.name || code || `资产 ${index + 1}`).trim(),
-        category: asset?.category || "stock",
+        category,
         kind,
-        code,
-        secid: String(asset?.secid || inferSecid(code)).trim(),
-        shares: Math.max(0, Number(asset?.shares) || 0),
-        amountCny: Math.max(0, Number(asset?.amountCny) || 0),
-        lastPrice: Math.max(0, Number(asset?.lastPrice) || 0),
+        code: cash ? "" : code,
+        secid: cash ? "" : String(asset?.secid || inferSecid(code)).trim(),
+        shares,
+        amountCny,
+        lastPrice,
         lastPriceAt: asset?.lastPriceAt || "",
         enabled: asset?.enabled !== false
       };
@@ -957,7 +970,7 @@
     function assetValue(asset) {
       const item = normalizeAsset(asset);
       if (!item.enabled) return 0;
-      if (item.kind === "cash") return item.amountCny;
+      if (isCashAsset(item)) return item.amountCny;
       return item.shares * item.lastPrice;
     }
 
@@ -1067,19 +1080,26 @@
     async function refreshAssetPrices() {
       if (!state.settings || state.assetPriceLoading) return;
       normalizeAssetsInSettings();
-      const assets = portfolioAssets();
       state.assetPriceLoading = true;
       state.assetPriceMessage = "正在刷新资产价格...";
       state.assetPriceMessageType = "info";
       render();
+      const currentAssets = portfolioAssets();
       let ok = 0;
       let failed = 0;
-      for (const asset of assets) {
-        if (!asset.enabled || asset.kind === "cash") continue;
+      for (let index = 0; index < currentAssets.length; index += 1) {
+        const asset = currentAssets[index];
+        if (!asset.enabled || isCashAsset(asset)) continue;
         try {
-          const quote = asset.kind === "fund" ? await fetchFundPrice(asset) : await fetchExchangePrice(asset);
+          let quote;
+          try {
+            quote = asset.kind === "fund" ? await fetchFundPrice(asset) : await fetchExchangePrice(asset);
+          } catch (error) {
+            quote = asset.kind === "fund" ? await fetchExchangePrice(asset) : await fetchFundPrice(asset);
+          }
           asset.lastPrice = Math.round(Number(quote.price) * 10000) / 10000;
           asset.lastPriceAt = nowIso();
+          asset.lastPriceError = "";
           if (quote.name && (!asset.name || asset.name === asset.code)) asset.name = quote.name;
           if (!asset.secid && asset.kind === "exchange") asset.secid = inferSecid(asset.code);
           ok += 1;
@@ -1432,18 +1452,13 @@
         const asset = normalizeAsset(raw, index);
         const value = assetValue(asset);
         const pct = summary.total > 0 ? (value / summary.total) * 100 : 0;
-        const isCash = asset.kind === "cash";
+        const isCash = isCashAsset(asset);
         return `
           <tr>
             <td><input data-asset-index="${index}" data-asset-field="name" value="${escapeHtml(asset.name)}" /></td>
             <td>
               <select data-asset-index="${index}" data-asset-field="category">
                 ${assetCategories.map((item) => `<option value="${escapeHtml(item.value)}" ${asset.category === item.value ? "selected" : ""}>${escapeHtml(item.label)}</option>`).join("")}
-              </select>
-            </td>
-            <td>
-              <select data-asset-index="${index}" data-asset-field="kind">
-                ${assetKinds.map((item) => `<option value="${escapeHtml(item.value)}" ${asset.kind === item.value ? "selected" : ""}>${escapeHtml(item.label)}</option>`).join("")}
               </select>
             </td>
             <td><input data-asset-index="${index}" data-asset-field="code" value="${escapeHtml(asset.code)}" ${isCash ? "disabled" : ""} /></td>
@@ -1486,10 +1501,22 @@
           </div>
           ${rows ? `
             <div style="overflow-x:auto">
-            <table class="data-table" style="min-width:1180px">
+            <table class="data-table asset-table" style="min-width:960px">
+              <colgroup>
+                <col class="asset-col-name" style="width:170px" />
+                <col class="asset-col-category" style="width:130px" />
+                <col class="asset-col-code" style="width:92px" />
+                <col class="asset-col-shares" style="width:92px" />
+                <col class="asset-col-amount" style="width:110px" />
+                <col class="asset-col-price" style="width:110px" />
+                <col class="asset-col-value" style="width:110px" />
+                <col class="asset-col-percent" style="width:70px" />
+                <col class="asset-col-enabled" style="width:66px" />
+                <col class="asset-col-action" style="width:100px" />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>名称</th><th>分类</th><th>类型</th><th>代码</th><th>份额</th><th>固定金额</th><th>价格/净值</th><th>市值</th><th>占比</th><th>启用</th><th>操作</th>
+                  <th>名称</th><th>分类</th><th>代码</th><th>份额</th><th>固定金额</th><th>价格/净值</th><th>市值</th><th>占比</th><th>启用</th><th>操作</th>
                 </tr>
               </thead>
               <tbody>${rows}</tbody>
@@ -2244,6 +2271,20 @@
       if (field === "shares" || field === "amountCny") value = Math.max(0, Number(value) || 0);
       if (field === "enabled") value = Boolean(element.checked);
       assets[index][field] = value;
+      if (field === "category") {
+        if (assetInputMode(value) === "cash") {
+          assets[index].kind = "cash";
+          assets[index].code = "";
+          assets[index].secid = "";
+          assets[index].shares = 0;
+          assets[index].lastPrice = 0;
+          assets[index].lastPriceError = "";
+        } else {
+          assets[index].kind = assets[index].kind === "fund" ? "fund" : "exchange";
+          assets[index].amountCny = 0;
+          assets[index].secid = inferSecid(assets[index].code);
+        }
+      }
       if (field === "code") {
         assets[index].secid = inferSecid(value);
         assets[index].lastPrice = 0;
