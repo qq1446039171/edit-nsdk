@@ -1,6 +1,6 @@
 {
   "funds": {
-    "depositAmount": 54056.09,
+    "depositAmount": 101123.5,
     "nasdaqExposureLimitPercent": 70
   },
   "allocation": {
@@ -22,7 +22,7 @@
         "shares": 12000,
         "amountCny": 0,
         "lastPrice": 2.273,
-        "lastPriceAt": "2026-05-31T12:11:23.032Z",
+        "lastPriceAt": "2026-05-31T12:23:19.284Z",
         "enabled": true
       },
       {
@@ -35,7 +35,7 @@
         "shares": 2500,
         "amountCny": 0,
         "lastPrice": 1.694,
-        "lastPriceAt": "2026-05-31T12:11:23.068Z",
+        "lastPriceAt": "2026-05-31T12:23:19.321Z",
         "enabled": true
       },
       {
@@ -48,7 +48,7 @@
         "shares": 1948,
         "amountCny": 0,
         "lastPrice": 8.5064,
-        "lastPriceAt": "2026-05-31T12:11:23.215Z",
+        "lastPriceAt": "2026-05-31T12:23:19.489Z",
         "enabled": true
       },
       {
@@ -61,7 +61,7 @@
         "shares": 2841,
         "amountCny": 0,
         "lastPrice": 2.103,
-        "lastPriceAt": "2026-05-31T12:11:23.282Z",
+        "lastPriceAt": "2026-05-31T12:23:19.538Z",
         "enabled": true
       },
       {
@@ -73,8 +73,8 @@
         "secid": "0.000834",
         "shares": 1277,
         "amountCny": 0,
-        "lastPrice": 0,
-        "lastPriceAt": "",
+        "lastPrice": 6.5616,
+        "lastPriceAt": "2026-05-31T12:23:19.600Z",
         "enabled": true
       },
       {
@@ -86,8 +86,8 @@
         "secid": "0.019172",
         "shares": 2155,
         "amountCny": 0,
-        "lastPrice": 0,
-        "lastPriceAt": "",
+        "lastPrice": 1.8073,
+        "lastPriceAt": "2026-05-31T12:23:19.654Z",
         "enabled": true
       },
       {
@@ -99,8 +99,8 @@
         "secid": "0.016452",
         "shares": 2783,
         "amountCny": 0,
-        "lastPrice": 0,
-        "lastPriceAt": "",
+        "lastPrice": 2.3698,
+        "lastPriceAt": "2026-05-31T12:23:19.701Z",
         "enabled": true
       },
       {
@@ -112,8 +112,8 @@
         "secid": "0.017436",
         "shares": 686,
         "amountCny": 0,
-        "lastPrice": 0,
-        "lastPriceAt": "",
+        "lastPrice": 2.4738,
+        "lastPriceAt": "2026-05-31T12:23:19.750Z",
         "enabled": true
       },
       {
@@ -125,8 +125,8 @@
         "secid": "0.008976",
         "shares": 4880,
         "amountCny": 0,
-        "lastPrice": 0,
-        "lastPriceAt": "",
+        "lastPrice": 1.0994,
+        "lastPriceAt": "2026-05-31T12:23:19.895Z",
         "enabled": true
       },
       {
@@ -138,15 +138,67 @@
         "secid": "0.110020",
         "shares": 2181,
         "amountCny": 0,
+        "lastPrice": 1.9694,
+        "lastPriceAt": "2026-05-31T12:23:19.954Z",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780230265572",
+        "name": "华安黄金ETF",
+        "category": "gold",
+        "kind": "exchange",
+        "code": "000217",
+        "secid": "0.000217",
+        "shares": 16443,
+        "amountCny": 0,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780230333146",
+        "name": "富国黄金ETF",
+        "category": "gold",
+        "kind": "exchange",
+        "code": "009505",
+        "secid": "0.009505",
+        "shares": 4257,
+        "amountCny": 0,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780230365832",
+        "name": "支付宝活期",
+        "category": "cash",
+        "kind": "cash",
+        "code": "",
+        "secid": "",
+        "shares": 0,
+        "amountCny": 9478,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780230399975",
+        "name": "同花顺",
+        "category": "nasdaq_reserve_cash",
+        "kind": "cash",
+        "code": "",
+        "secid": "",
+        "shares": 0,
+        "amountCny": 7363,
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
       }
     ],
-    "investedNasdaqCny": 54056.09,
-    "reserveCashNasdaqCny": 0,
+    "investedNasdaqCny": 74622.17,
+    "reserveCashNasdaqCny": 7363,
     "reserveUsedNasdaqCny": 0,
-    "otherCashCny": 0,
+    "otherCashCny": 19138.33,
     "fearOfMissingOut": false
   },
   "drawdown": {
