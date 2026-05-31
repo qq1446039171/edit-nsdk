@@ -1,6 +1,6 @@
 {
   "funds": {
-    "depositAmount": 200001,
+    "depositAmount": 27276,
     "nasdaqExposureLimitPercent": 70
   },
   "allocation": {
@@ -14,48 +14,61 @@
     "assets": [
       {
         "id": "513100",
-        "name": "纳指ETF",
+        "name": "同纳指ETF",
         "category": "nasdaq",
         "kind": "exchange",
         "code": "513100",
         "secid": "1.513100",
-        "shares": 34085.47,
+        "shares": 12000,
         "amountCny": 0,
-        "lastPrice": 1.907,
-        "lastPriceAt": "2026-04-26T15:32:41.495Z",
+        "lastPrice": 2.273,
+        "lastPriceAt": "2026-05-31T11:59:36.944Z",
         "enabled": true
       },
       {
-        "id": "alipay-nasdaq-reserve",
-        "name": "支付宝纳指回撤备用金",
-        "category": "nasdaq_reserve_cash",
-        "kind": "cash",
-        "code": "",
-        "secid": "",
-        "shares": 0,
-        "amountCny": 60000,
+        "id": "asset-1780228838359",
+        "name": "同纳指ETF",
+        "category": "nasdaq",
+        "kind": "exchange",
+        "code": "159941",
+        "secid": "0.159941",
+        "shares": 2500,
+        "amountCny": 0,
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
       },
       {
-        "id": "regular-cash",
-        "name": "普通现金",
-        "category": "cash",
-        "kind": "cash",
-        "code": "",
-        "secid": "",
-        "shares": 0,
-        "amountCny": 75000,
+        "id": "asset-1780228876679",
+        "name": "广发纳斯达克",
+        "category": "nasdaq",
+        "kind": "exchange",
+        "code": "270042",
+        "secid": "0.270042",
+        "shares": 1948,
+        "amountCny": 0,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780228945307",
+        "name": "天弘纳斯达克",
+        "category": "nasdaq",
+        "kind": "exchange",
+        "code": "018043",
+        "secid": "0.018043",
+        "shares": 2841,
+        "amountCny": 0,
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
       }
     ],
-    "investedNasdaqCny": 65001,
-    "reserveCashNasdaqCny": 60000,
+    "investedNasdaqCny": 27276,
+    "reserveCashNasdaqCny": 0,
     "reserveUsedNasdaqCny": 0,
-    "otherCashCny": 75000,
+    "otherCashCny": 0,
     "fearOfMissingOut": false
   },
   "drawdown": {
