@@ -1,6 +1,6 @@
 {
   "funds": {
-    "depositAmount": 27276,
+    "depositAmount": 54056.09,
     "nasdaqExposureLimitPercent": 70
   },
   "allocation": {
@@ -22,7 +22,7 @@
         "shares": 12000,
         "amountCny": 0,
         "lastPrice": 2.273,
-        "lastPriceAt": "2026-05-31T11:59:36.944Z",
+        "lastPriceAt": "2026-05-31T12:11:23.032Z",
         "enabled": true
       },
       {
@@ -34,8 +34,8 @@
         "secid": "0.159941",
         "shares": 2500,
         "amountCny": 0,
-        "lastPrice": 0,
-        "lastPriceAt": "",
+        "lastPrice": 1.694,
+        "lastPriceAt": "2026-05-31T12:11:23.068Z",
         "enabled": true
       },
       {
@@ -47,8 +47,8 @@
         "secid": "0.270042",
         "shares": 1948,
         "amountCny": 0,
-        "lastPrice": 0,
-        "lastPriceAt": "",
+        "lastPrice": 8.5064,
+        "lastPriceAt": "2026-05-31T12:11:23.215Z",
         "enabled": true
       },
       {
@@ -60,12 +60,90 @@
         "secid": "0.018043",
         "shares": 2841,
         "amountCny": 0,
+        "lastPrice": 2.103,
+        "lastPriceAt": "2026-05-31T12:11:23.282Z",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780229579903",
+        "name": "大成纳斯达克",
+        "category": "nasdaq",
+        "kind": "exchange",
+        "code": "000834",
+        "secid": "0.000834",
+        "shares": 1277,
+        "amountCny": 0,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780229660445",
+        "name": "摩根纳斯达克",
+        "category": "nasdaq",
+        "kind": "exchange",
+        "code": "019172",
+        "secid": "0.019172",
+        "shares": 2155,
+        "amountCny": 0,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780229683998",
+        "name": "南方纳斯达克",
+        "category": "nasdaq",
+        "kind": "exchange",
+        "code": "016452",
+        "secid": "0.016452",
+        "shares": 2783,
+        "amountCny": 0,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780229749526",
+        "name": "华宝纳斯达克",
+        "category": "nasdaq",
+        "kind": "exchange",
+        "code": "017436",
+        "secid": "0.017436",
+        "shares": 686,
+        "amountCny": 0,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780229780945",
+        "name": "中证消费50",
+        "category": "stock",
+        "kind": "exchange",
+        "code": "008976",
+        "secid": "0.008976",
+        "shares": 4880,
+        "amountCny": 0,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "asset-1780229832187",
+        "name": "易方达沪深300",
+        "category": "stock",
+        "kind": "exchange",
+        "code": "110020",
+        "secid": "0.110020",
+        "shares": 2181,
+        "amountCny": 0,
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
       }
     ],
-    "investedNasdaqCny": 27276,
+    "investedNasdaqCny": 54056.09,
     "reserveCashNasdaqCny": 0,
     "reserveUsedNasdaqCny": 0,
     "otherCashCny": 0,
