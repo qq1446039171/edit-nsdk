@@ -1,6 +1,6 @@
 {
   "funds": {
-    "depositAmount": 101123.5,
+    "depositAmount": 214994.63,
     "nasdaqExposureLimitPercent": 70
   },
   "allocation": {
@@ -22,7 +22,7 @@
         "shares": 12000,
         "amountCny": 0,
         "lastPrice": 2.273,
-        "lastPriceAt": "2026-05-31T12:23:19.284Z",
+        "lastPriceAt": "2026-05-31T12:28:09.664Z",
         "enabled": true
       },
       {
@@ -35,7 +35,7 @@
         "shares": 2500,
         "amountCny": 0,
         "lastPrice": 1.694,
-        "lastPriceAt": "2026-05-31T12:23:19.321Z",
+        "lastPriceAt": "2026-05-31T12:28:09.701Z",
         "enabled": true
       },
       {
@@ -48,7 +48,7 @@
         "shares": 1948,
         "amountCny": 0,
         "lastPrice": 8.5064,
-        "lastPriceAt": "2026-05-31T12:23:19.489Z",
+        "lastPriceAt": "2026-05-31T12:28:09.758Z",
         "enabled": true
       },
       {
@@ -61,7 +61,7 @@
         "shares": 2841,
         "amountCny": 0,
         "lastPrice": 2.103,
-        "lastPriceAt": "2026-05-31T12:23:19.538Z",
+        "lastPriceAt": "2026-05-31T12:28:09.815Z",
         "enabled": true
       },
       {
@@ -74,7 +74,7 @@
         "shares": 1277,
         "amountCny": 0,
         "lastPrice": 6.5616,
-        "lastPriceAt": "2026-05-31T12:23:19.600Z",
+        "lastPriceAt": "2026-05-31T12:28:09.860Z",
         "enabled": true
       },
       {
@@ -87,7 +87,7 @@
         "shares": 2155,
         "amountCny": 0,
         "lastPrice": 1.8073,
-        "lastPriceAt": "2026-05-31T12:23:19.654Z",
+        "lastPriceAt": "2026-05-31T12:28:09.916Z",
         "enabled": true
       },
       {
@@ -100,7 +100,7 @@
         "shares": 2783,
         "amountCny": 0,
         "lastPrice": 2.3698,
-        "lastPriceAt": "2026-05-31T12:23:19.701Z",
+        "lastPriceAt": "2026-05-31T12:28:10.028Z",
         "enabled": true
       },
       {
@@ -113,7 +113,7 @@
         "shares": 686,
         "amountCny": 0,
         "lastPrice": 2.4738,
-        "lastPriceAt": "2026-05-31T12:23:19.750Z",
+        "lastPriceAt": "2026-05-31T12:28:10.068Z",
         "enabled": true
       },
       {
@@ -126,7 +126,7 @@
         "shares": 4880,
         "amountCny": 0,
         "lastPrice": 1.0994,
-        "lastPriceAt": "2026-05-31T12:23:19.895Z",
+        "lastPriceAt": "2026-05-31T12:28:10.109Z",
         "enabled": true
       },
       {
@@ -139,7 +139,7 @@
         "shares": 2181,
         "amountCny": 0,
         "lastPrice": 1.9694,
-        "lastPriceAt": "2026-05-31T12:23:19.954Z",
+        "lastPriceAt": "2026-05-31T12:28:10.157Z",
         "enabled": true
       },
       {
@@ -151,8 +151,8 @@
         "secid": "0.000217",
         "shares": 16443,
         "amountCny": 0,
-        "lastPrice": 0,
-        "lastPriceAt": "",
+        "lastPrice": 3.3482,
+        "lastPriceAt": "2026-05-31T12:28:10.201Z",
         "enabled": true
       },
       {
@@ -164,8 +164,8 @@
         "secid": "0.009505",
         "shares": 4257,
         "amountCny": 0,
-        "lastPrice": 0,
-        "lastPriceAt": "",
+        "lastPrice": 2.0711,
+        "lastPriceAt": "2026-05-31T12:28:10.242Z",
         "enabled": true
       },
       {
@@ -193,12 +193,25 @@
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
+      },
+      {
+        "id": "asset-1780230724775",
+        "name": "现金借出",
+        "category": "cash",
+        "kind": "cash",
+        "code": "",
+        "secid": "",
+        "shares": 0,
+        "amountCny": 50000,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
       }
     ],
     "investedNasdaqCny": 74622.17,
     "reserveCashNasdaqCny": 7363,
     "reserveUsedNasdaqCny": 0,
-    "otherCashCny": 19138.33,
+    "otherCashCny": 133009.46,
     "fearOfMissingOut": false
   },
   "drawdown": {
