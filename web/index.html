@@ -205,6 +205,15 @@
     .btn.success { background: rgba(76, 175, 80, 0.24); border-color: rgba(129, 199, 132, 0.62); color: var(--green-soft); }
     .btn.warning { background: rgba(255, 152, 0, 0.15); border-color: rgba(255, 152, 0, 0.36); color: #ffd08a; }
     .btn.danger { background: rgba(239, 83, 80, 0.12); border-color: rgba(239, 83, 80, 0.36); color: #ff9a98; }
+    .privacy-toggle .eye-icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
 
     .notice {
       display: flex;
@@ -685,7 +694,8 @@
       assetPriceLoading: false,
       assetPriceMessage: "",
       assetPriceMessageType: "info",
-      assetRowsCollapsed: false
+      assetRowsCollapsed: false,
+      balancesHidden: false
     };
 
     function escapeHtml(value) {
@@ -902,7 +912,7 @@
     function fmtMoney(value) {
       const n = Number(value);
       if (!Number.isFinite(n)) return "-";
-      return moneyFormatter.format(n);
+      return state.balancesHidden ? "******" : moneyFormatter.format(n);
     }
 
     function fmtPercent(value) {
@@ -1578,7 +1588,17 @@
         <section class="section gold">
           <div class="section-head">
             <h2 class="section-title gold">v3.0 执行面板</h2>
-            <button class="btn primary" data-action="open-adjust" ${state.settings ? "" : "disabled"}>新增金额</button>
+            <div class="actions">
+              <button class="btn privacy-toggle" data-action="toggle-balances" aria-pressed="${state.balancesHidden ? "true" : "false"}" aria-label="${state.balancesHidden ? "显示余额" : "隐藏余额"}" title="${state.balancesHidden ? "显示余额" : "隐藏余额"}">
+                <svg class="eye-icon" aria-hidden="true" viewBox="0 0 24 24">
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                  ${state.balancesHidden ? '<path d="M4 4l16 16"></path>' : ""}
+                </svg>
+                ${state.balancesHidden ? "显示余额" : "隐藏余额"}
+              </button>
+              <button class="btn primary" data-action="open-adjust" ${state.settings ? "" : "disabled"}>新增金额</button>
+            </div>
           </div>
           <div class="overview">
             <div class="donut-wrap">
@@ -2380,6 +2400,7 @@
       else if (action === "open-other-detail") { state.otherDetailOpen = true; render(); }
       else if (action === "close-other-detail") { state.otherDetailOpen = false; render(); }
       else if (action === "apply-adjust") applyAdjust();
+      else if (action === "toggle-balances") { state.balancesHidden = !state.balancesHidden; render(); }
       else if (action === "add-asset") addAsset();
       else if (action === "delete-asset") deleteAsset(Number(target.dataset.assetIndex));
       else if (action === "refresh-assets") await refreshAssetPrices();
