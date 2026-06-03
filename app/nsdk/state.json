@@ -113,11 +113,11 @@
       "name": "纳指100（NDX）",
       "price": 30668,
       "pct": 0.4605,
-      "high1y": 30680,
-      "high1yDay": "2026-06-02",
+      "high1y": 30647,
+      "high1yDay": "2026-06-01",
       "_rawPrice": 746.16,
-      "_rawHigh": 746.44,
-      "drawdownPct": 0.04
+      "_rawHigh": 745.65,
+      "drawdownPct": -0.07
     },
     "buy": {
       "code": "513100",
@@ -125,7 +125,7 @@
       "price": null,
       "pct": null
     },
-    "at": "2026-06-03T07:03:37.396Z"
+    "at": "2026-06-03T12:04:25.589Z"
   },
   "freeze": {
     "active": false,
