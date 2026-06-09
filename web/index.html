@@ -346,6 +346,17 @@
       padding-left: 8px;
       padding-right: 8px;
     }
+    .asset-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .asset-actions .btn {
+      width: auto;
+      min-height: 42px;
+      padding: 8px 10px;
+    }
 
     .switch {
       position: relative;
@@ -685,6 +696,9 @@
       githubCommitMessage: "chore(config): update settings from web",
       adjustOpen: false,
       otherDetailOpen: false,
+      assetAmountOpen: false,
+      assetAmountIndex: -1,
+      assetAmountInput: 0,
       addDepositDelta: 0,
       addNasdaqInvestDelta: 0,
       addReserveDelta: 0,
@@ -936,7 +950,7 @@
     }
 
     function hasPortfolioAssets() {
-      return portfolioAssets().some((asset) => asset && asset.enabled !== false);
+      return portfolioAssets().some((asset) => asset);
     }
 
     function inferSecid(code) {
@@ -955,6 +969,29 @@
 
     function isCashAsset(asset) {
       return assetInputMode(asset?.category) === "cash";
+    }
+
+    function calculateAssetAddition(asset, amountCny) {
+      const amount = Math.max(0, Number(amountCny) || 0);
+      if (amount <= 0) return { ok: false, error: "请输入大于 0 的金额" };
+      if (assetInputMode(asset?.category) === "cash") {
+        return {
+          ok: true,
+          mode: "cash",
+          amountCny: amount,
+          nextAmountCny: Math.round((Math.max(0, Number(asset?.amountCny) || 0) + amount) * 100) / 100
+        };
+      }
+      const price = Math.max(0, Number(asset?.lastPrice) || 0);
+      if (price <= 0) return { ok: false, error: "缺少有效价格/净值，请先刷新价格" };
+      const addedShares = Math.round((amount / price) * 100) / 100;
+      return {
+        ok: true,
+        mode: "quoted",
+        amountCny: amount,
+        addedShares,
+        nextShares: Math.round((Math.max(0, Number(asset?.shares) || 0) + addedShares) * 100) / 100
+      };
     }
 
     function normalizeAsset(asset, index = 0) {
@@ -977,7 +1014,7 @@
         amountCny,
         lastPrice,
         lastPriceAt: asset?.lastPriceAt || "",
-        enabled: asset?.enabled !== false
+        enabled: true
       };
     }
 
@@ -989,7 +1026,6 @@
 
     function assetValue(asset) {
       const item = normalizeAsset(asset);
-      if (!item.enabled) return 0;
       if (isCashAsset(item)) return item.amountCny;
       return item.shares * item.lastPrice;
     }
@@ -1005,7 +1041,6 @@
       };
       for (const raw of portfolioAssets()) {
         const asset = normalizeAsset(raw);
-        if (!asset.enabled) continue;
         const value = assetValue(asset);
         summary.total += value;
         summary.byCategory[asset.category] = (summary.byCategory[asset.category] || 0) + value;
@@ -1109,7 +1144,7 @@
       let failed = 0;
       for (let index = 0; index < currentAssets.length; index += 1) {
         const asset = currentAssets[index];
-        if (!asset.enabled || isCashAsset(asset)) continue;
+        if (isCashAsset(asset)) continue;
         try {
           let quote;
           try {
@@ -1488,12 +1523,11 @@
             <td>¥${escapeHtml(fmtMoney(value))}</td>
             <td>${escapeHtml(fmtPercent(pct))}%</td>
             <td>
-              <label class="switch" aria-label="启用 ${escapeHtml(asset.name)}">
-                <input type="checkbox" data-asset-index="${index}" data-asset-field="enabled" ${asset.enabled ? "checked" : ""} />
-                <span class="slider"></span>
-              </label>
+              <div class="asset-actions">
+                <button class="btn primary" data-action="open-asset-amount" data-asset-index="${index}">新增金额</button>
+                <button class="btn danger" data-action="delete-asset" data-asset-index="${index}">删除</button>
+              </div>
             </td>
-            <td><button class="btn danger" data-action="delete-asset" data-asset-index="${index}">删除</button></td>
           </tr>
         `;
       }).join("");
@@ -1537,12 +1571,11 @@
                 <col class="asset-col-price" style="width:110px" />
                 <col class="asset-col-value" style="width:110px" />
                 <col class="asset-col-percent" style="width:70px" />
-                <col class="asset-col-enabled" style="width:66px" />
-                <col class="asset-col-action" style="width:100px" />
+                <col class="asset-col-action" style="width:180px" />
               </colgroup>
               <thead>
                 <tr>
-                  <th>名称</th><th>分类</th><th>代码</th><th>份额</th><th>固定金额</th><th>价格/净值</th><th>市值</th><th>占比</th><th>启用</th><th>操作</th>
+                  <th>名称</th><th>分类</th><th>代码</th><th>份额</th><th>固定金额</th><th>价格/净值</th><th>市值</th><th>占比</th><th>操作</th>
                 </tr>
               </thead>
               <tbody>${rows}</tbody>
@@ -1811,6 +1844,41 @@
       `;
     }
 
+    function assetAmountPreviewText(asset, result) {
+      if (!result.ok) return result.error;
+      if (result.mode === "cash") {
+        return `当前固定金额：¥${fmtMoney(asset.amountCny)} · 增加后：¥${fmtMoney(result.nextAmountCny)}`;
+      }
+      return `当前价格/净值：¥${fmtMoney(asset.lastPrice)} · 预计新增份额：${moneyFormatter.format(result.addedShares)} · 更新后份额：${moneyFormatter.format(result.nextShares)}`;
+    }
+
+    function renderAssetAmountModal() {
+      if (!state.assetAmountOpen) return "";
+      const raw = portfolioAssets()[state.assetAmountIndex];
+      if (!raw) return "";
+      const asset = normalizeAsset(raw, state.assetAmountIndex);
+      const result = calculateAssetAddition(asset, state.assetAmountInput);
+      return `
+        <div class="modal-backdrop" data-action="modal-backdrop">
+          <div class="modal" role="dialog" aria-modal="true" aria-labelledby="assetAmountTitle">
+            <div class="modal-head">
+              <h2 id="assetAmountTitle" class="modal-title">新增金额 · ${escapeHtml(asset.name)}</h2>
+              <button class="btn" data-action="close-asset-amount" aria-label="关闭">关闭</button>
+            </div>
+            <div class="form-item">
+              <label for="assetAmountInput">新增金额（元）</label>
+              <input id="assetAmountInput" data-asset-amount type="number" min="0" step="100" value="${escapeHtml(state.assetAmountInput)}" autofocus />
+              <div id="assetAmountPreview" class="${result.ok ? "field-desc" : "json-error"}">${escapeHtml(assetAmountPreviewText(asset, result))}</div>
+            </div>
+            <div class="modal-foot">
+              <button class="btn" data-action="close-asset-amount">取消</button>
+              <button id="applyAssetAmountBtn" class="btn primary" data-action="apply-asset-amount" ${result.ok ? "" : "disabled"}>确认新增</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function renderOtherDetailModal() {
       if (!state.otherDetailOpen) return "";
       const total = depositAmount();
@@ -1909,6 +1977,7 @@
         </div>
         ${renderGithubModal()}
         ${renderAdjustModal()}
+        ${renderAssetAmountModal()}
         ${renderOtherDetailModal()}
         ${renderVersionsDrawer()}
       `;
@@ -2337,6 +2406,53 @@
       render();
     }
 
+    function openAssetAmount(index) {
+      if (!Number.isInteger(index) || !portfolioAssets()[index]) return;
+      state.assetAmountIndex = index;
+      state.assetAmountInput = 0;
+      state.assetAmountOpen = true;
+      render();
+    }
+
+    function closeAssetAmount() {
+      state.assetAmountOpen = false;
+      state.assetAmountIndex = -1;
+      state.assetAmountInput = 0;
+      render();
+    }
+
+    function applyAssetAmount() {
+      const assets = portfolioAssets();
+      const index = state.assetAmountIndex;
+      if (!Number.isInteger(index) || !assets[index]) return;
+      const asset = normalizeAsset(assets[index], index);
+      const result = calculateAssetAddition(asset, state.assetAmountInput);
+      if (!result.ok) return;
+      if (result.mode === "cash") asset.amountCny = result.nextAmountCny;
+      else asset.shares = result.nextShares;
+      assets[index] = asset;
+      state.settings.portfolio.assets = assets.map(normalizeAsset);
+      state.assetAmountOpen = false;
+      state.assetAmountIndex = -1;
+      state.assetAmountInput = 0;
+      syncDerived();
+      render();
+    }
+
+    function updateAssetAmountPreview() {
+      const raw = portfolioAssets()[state.assetAmountIndex];
+      if (!raw) return;
+      const asset = normalizeAsset(raw, state.assetAmountIndex);
+      const result = calculateAssetAddition(asset, state.assetAmountInput);
+      const preview = document.getElementById("assetAmountPreview");
+      const applyBtn = document.getElementById("applyAssetAmountBtn");
+      if (preview) {
+        preview.textContent = assetAmountPreviewText(asset, result);
+        preview.className = result.ok ? "field-desc" : "json-error";
+      }
+      if (applyBtn) applyBtn.disabled = !result.ok;
+    }
+
     function commitAssetField(element, options = {}) {
       const index = Number(element.dataset.assetIndex);
       const field = element.dataset.assetField;
@@ -2345,7 +2461,6 @@
       const old = JSON.stringify(assets[index]);
       let value = element.value;
       if (field === "shares" || field === "amountCny") value = Math.max(0, Number(value) || 0);
-      if (field === "enabled") value = Boolean(element.checked);
       assets[index][field] = value;
       if (field === "category") {
         if (assetInputMode(value) === "cash") {
@@ -2393,7 +2508,7 @@
       else if (action === "reset-defaults") await resetDefaults();
       else if (action === "export-json") await exportJson();
       else if (action === "open-github") { state.githubSaveOpen = true; render(); }
-      else if (action === "close-github" || action === "modal-backdrop") { state.githubSaveOpen = false; state.adjustOpen = false; state.otherDetailOpen = false; render(); }
+      else if (action === "close-github" || action === "modal-backdrop") { state.githubSaveOpen = false; state.adjustOpen = false; state.otherDetailOpen = false; state.assetAmountOpen = false; state.assetAmountIndex = -1; state.assetAmountInput = 0; render(); }
       else if (action === "dispatch-github") await dispatchGithubSave();
       else if (action === "open-adjust") { state.addDepositDelta = 0; state.addNasdaqInvestDelta = 0; state.addReserveDelta = 0; state.addOtherCashDelta = 0; state.adjustOpen = true; render(); }
       else if (action === "close-adjust") { state.adjustOpen = false; render(); }
@@ -2402,6 +2517,9 @@
       else if (action === "apply-adjust") applyAdjust();
       else if (action === "toggle-balances") { state.balancesHidden = !state.balancesHidden; render(); }
       else if (action === "add-asset") addAsset();
+      else if (action === "open-asset-amount") openAssetAmount(Number(target.dataset.assetIndex));
+      else if (action === "close-asset-amount") closeAssetAmount();
+      else if (action === "apply-asset-amount") applyAssetAmount();
       else if (action === "delete-asset") deleteAsset(Number(target.dataset.assetIndex));
       else if (action === "refresh-assets") await refreshAssetPrices();
       else if (action === "toggle-assets") { state.assetRowsCollapsed = !state.assetRowsCollapsed; render(); }
@@ -2441,6 +2559,9 @@
       const el = event.target;
       if (el.matches("[data-asset-field]")) {
         commitAssetField(el, { render: false });
+      } else if (el.matches("[data-asset-amount]")) {
+        state.assetAmountInput = Number(el.value) || 0;
+        updateAssetAmountPreview();
       } else if (el.matches("[data-pref]")) {
         state[el.dataset.pref] = el.value;
         persistGithubPrefs();

@@ -15,6 +15,9 @@ assert.match(html, /categoryAmount\("stock"\)/, 'overview should surface other s
 assert.match(html, /--gold-deg/, 'donut should include gold allocation as a visible segment');
 assert.match(html, /data-action="open-other-detail"/, 'other assets card should expose a detail button');
 assert.match(html, /renderOtherDetailModal/, 'other asset details should render in a modal');
+assert.match(html, /data-action="open-asset-amount"/, 'each asset row should include an add amount action');
+assert.match(html, /renderAssetAmountModal/, 'asset amount entry should render in a modal');
+assert.match(html, /function calculateAssetAddition\(asset, amountCny\)/, 'asset amount entry should use a dedicated calculation function');
 assert.match(html, /其他资产与现金/, 'overview should label the combined non-NASDAQ bucket clearly');
 assert.doesNotMatch(html, /<div class="stat-label">黄金<\/div>/, 'gold should not be shown as a standalone overview card');
 assert.doesNotMatch(html, /<div class="stat-label">其他股票\/ETF<\/div>/, 'other stock and ETF should not be shown as a standalone overview card');
@@ -24,6 +27,9 @@ assert.ok(tableMatch, 'asset table should use a dedicated asset-table class');
 
 const table = tableMatch[0];
 assert.ok(table.includes('<colgroup>'), 'asset table should define column widths with colgroup');
+assert.doesNotMatch(table, /data-asset-field="enabled"/, 'asset table should not render enabled switches');
+assert.doesNotMatch(table, /<th>启用<\/th>/, 'asset table should not render an enabled column');
+assert.doesNotMatch(table, /asset-col-enabled/, 'asset table should not reserve width for enabled controls');
 
 const expectedWidths = {
   category: 130,
