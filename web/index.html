@@ -235,7 +235,81 @@
       display: grid;
       grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
       gap: 24px;
+      align-items: start;
+    }
+    .overview-side {
+      display: grid;
+      gap: 14px;
+    }
+    .profit-summary {
+      min-height: 124px;
+      border: 1px solid rgba(76, 175, 80, 0.2);
+      border-radius: 10px;
+      background: rgba(10, 14, 23, 0.52);
+      padding: 16px;
+    }
+    .profit-summary-value {
+      margin-top: 5px;
+      color: #fff;
+      font-size: 30px;
+      line-height: 1.18;
+      font-weight: 850;
+    }
+    .profit-positive { color: var(--red); }
+    .profit-negative { color: var(--green-soft); }
+    .profit-neutral { color: var(--text); }
+    .profit-chart-panel {
+      margin-top: 20px;
+      border: 1px solid rgba(76, 175, 80, 0.16);
+      border-radius: 10px;
+      background: rgba(10, 14, 23, 0.44);
+      padding: 16px;
+    }
+    .profit-chart-head {
+      display: flex;
       align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .profit-chart-title { color: #fff; font-size: 16px; font-weight: 800; }
+    .profit-range {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(72px, 1fr));
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid rgba(129, 199, 132, 0.2);
+      border-radius: 8px;
+      background: rgba(10, 14, 23, 0.62);
+    }
+    .profit-range .btn {
+      min-height: 36px;
+      padding: 6px 12px;
+      border-color: transparent;
+    }
+    .profit-range .btn.active {
+      border-color: rgba(76, 175, 80, 0.5);
+      background: rgba(76, 175, 80, 0.22);
+      color: #fff;
+    }
+    .profit-chart {
+      width: 100%;
+      min-height: 240px;
+      display: block;
+      overflow: visible;
+    }
+    .profit-chart-grid { stroke: rgba(255, 255, 255, 0.1); stroke-width: 1; }
+    .profit-chart-zero { stroke: rgba(255, 215, 0, 0.38); stroke-width: 1; stroke-dasharray: 5 5; }
+    .profit-chart-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .profit-chart-point { stroke: #0a0e17; stroke-width: 2; }
+    .profit-chart-label { fill: var(--muted); font-size: 12px; }
+    .profit-chart-value { fill: var(--text); font-size: 12px; font-weight: 700; }
+    .profit-chart-empty {
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
     }
     .donut-wrap {
       display: grid;
@@ -544,6 +618,7 @@
       .section-head { display: grid; }
       .meta { justify-content: flex-start; }
       .overview, .stats-grid, .group-grid, .state-grid, .dialog-grid { grid-template-columns: 1fr; }
+      .profit-chart-head { align-items: flex-start; }
     }
     @media (max-width: 560px) {
       .container { width: min(100% - 22px, 1400px); padding-top: 14px; }
@@ -552,6 +627,8 @@
       .btn { width: 100%; }
       .field-head { display: grid; }
       .field-key { text-align: left; }
+      .profit-chart-head { display: grid; }
+      .profit-range { width: 100%; }
     }
   </style>
 </head>
@@ -592,6 +669,7 @@
           titleEn: "Portfolio Amounts",
           fields: [
             { key: "portfolio.assets", nameZh: "资产持仓表", nameEn: "Portfolio Assets", description: "统一维护 ETF、股票、场外基金、现金和纳指回撤备用金。", type: "objectArray", default: [], hidden: true, validation: { required: false } },
+            { key: "portfolio.profitHistory", nameZh: "资产盈利历史", nameEn: "Portfolio Profit History", description: "按日期保存总资产快照，用于计算昨日盈亏和盈利走势图。", type: "objectArray", default: [], hidden: true, validation: { required: false } },
             { key: "portfolio.investedNasdaqCny", nameZh: "纳指已投资金额(元)", nameEn: "Invested NASDAQ Amount (CNY)", description: "由资产持仓表自动汇总：category=nasdaq 的市值合计。", type: "number", default: 0, editable: false, hidden: true, validation: { required: true, min: 0, max: 1000000000 } },
             { key: "portfolio.reserveCashNasdaqCny", nameZh: "备用金余额(元)", nameEn: "Reserve Cash Balance (CNY)", description: "由资产持仓表自动汇总：category=nasdaq_reserve_cash 的固定金额合计。", type: "number", default: 0, editable: false, hidden: true, validation: { required: true, min: 0, max: 1000000000 } },
             { key: "portfolio.reserveUsedNasdaqCny", nameZh: "纳指备用金已使用额度(元)", nameEn: "Reserve Used Amount (CNY)", description: "兼容旧配置字段；v3.0 页面按真实备用金余额执行。", type: "number", default: 0, hidden: true, validation: { required: true, min: 0, max: 1000000000 } },
@@ -699,6 +777,7 @@
       assetAmountOpen: false,
       assetAmountIndex: -1,
       assetAmountInput: 0,
+      assetPaymentAccountIndex: "",
       addDepositDelta: 0,
       addNasdaqInvestDelta: 0,
       addReserveDelta: 0,
@@ -709,7 +788,8 @@
       assetPriceMessage: "",
       assetPriceMessageType: "info",
       assetRowsCollapsed: false,
-      balancesHidden: false
+      balancesHidden: false,
+      profitRange: "week"
     };
 
     function escapeHtml(value) {
@@ -971,26 +1051,127 @@
       return assetInputMode(asset?.category) === "cash";
     }
 
+    function normalizeProfitHistory(entries) {
+      const byDate = {};
+      if (Array.isArray(entries)) {
+        for (const entry of entries) {
+          if (!entry || !/^\d{4}-\d{2}-\d{2}$/.test(String(entry.date || ""))) continue;
+          const totalAssetsCny = Number(entry.totalAssetsCny);
+          if (!Number.isFinite(totalAssetsCny) || totalAssetsCny < 0) continue;
+          byDate[entry.date] = {
+            date: entry.date,
+            totalAssetsCny: Math.round(totalAssetsCny * 100) / 100
+          };
+        }
+      }
+      return Object.keys(byDate).sort().map((date) => byDate[date]).slice(-366);
+    }
+
+    function calculateProfitSeries(entries, days) {
+      const history = normalizeProfitHistory(entries);
+      if (!history.length) return [];
+      const count = Math.max(1, Number(days) || 7);
+      const latestTime = Date.parse(`${history[history.length - 1].date}T00:00:00Z`);
+      const startTime = latestTime - ((count - 1) * 86400000);
+      const selected = history.filter((entry) => Date.parse(`${entry.date}T00:00:00Z`) >= startTime);
+      const baseline = selected[0].totalAssetsCny;
+      return selected.map((entry) => ({
+        date: entry.date,
+        totalAssetsCny: entry.totalAssetsCny,
+        profitCny: Math.round((entry.totalAssetsCny - baseline) * 100) / 100
+      }));
+    }
+
+    function calculateYesterdayProfit(entries) {
+      const history = normalizeProfitHistory(entries);
+      if (history.length < 2) return { available: false, amountCny: 0, comparedDate: "", currentDate: "" };
+      const current = history[history.length - 1];
+      const previous = history[history.length - 2];
+      return {
+        available: true,
+        amountCny: Math.round((current.totalAssetsCny - previous.totalAssetsCny) * 100) / 100,
+        comparedDate: previous.date,
+        currentDate: current.date
+      };
+    }
+
+    function localDateKey(value = new Date()) {
+      const date = value instanceof Date ? value : new Date(value);
+      if (!Number.isFinite(date.getTime())) return "";
+      const timeZone = state.settings?.nsdk?.timezone || "Asia/Shanghai";
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(date);
+      const get = (type) => parts.find((part) => part.type === type)?.value || "";
+      return `${get("year")}-${get("month")}-${get("day")}`;
+    }
+
+    function profitHistory() {
+      return normalizeProfitHistory(state.settings?.portfolio?.profitHistory);
+    }
+
+    function recordProfitSnapshot(date, totalAssetsCny) {
+      if (!state.settings || !/^\d{4}-\d{2}-\d{2}$/.test(String(date || ""))) return;
+      const total = Number(totalAssetsCny);
+      if (!Number.isFinite(total) || total < 0) return;
+      const next = profitHistory();
+      next.push({ date, totalAssetsCny: total });
+      state.settings.portfolio.profitHistory = normalizeProfitHistory(next);
+    }
+
+    function recordSavedAssetSnapshot() {
+      let latestTime = 0;
+      for (const asset of portfolioAssets()) {
+        if (isCashAsset(asset)) continue;
+        const time = Date.parse(asset?.lastPriceAt || "");
+        if (Number.isFinite(time)) latestTime = Math.max(latestTime, time);
+      }
+      if (latestTime > 0) recordProfitSnapshot(localDateKey(new Date(latestTime)), assetSummary().total);
+    }
+
+    function recordTodayProfitSnapshot() {
+      recordProfitSnapshot(localDateKey(), depositAmount());
+    }
+
     function calculateAssetAddition(asset, amountCny) {
-      const amount = Math.max(0, Number(amountCny) || 0);
-      if (amount <= 0) return { ok: false, error: "请输入大于 0 的金额" };
-      if (assetInputMode(asset?.category) === "cash") {
+      const amount = Number(amountCny) || 0;
+      if (amount === 0) return { ok: false, error: "请输入非 0 金额；负数表示卖出或减少" };
+      if (assetInputMode(asset && asset.category) === "cash") {
+        const nextAmountCny = Math.round((Math.max(0, Number(asset && asset.amountCny) || 0) + amount) * 100) / 100;
+        if (nextAmountCny < 0) return { ok: false, error: "调整后固定金额不能小于 0" };
         return {
           ok: true,
           mode: "cash",
           amountCny: amount,
-          nextAmountCny: Math.round((Math.max(0, Number(asset?.amountCny) || 0) + amount) * 100) / 100
+          nextAmountCny
         };
       }
-      const price = Math.max(0, Number(asset?.lastPrice) || 0);
+      const price = Math.max(0, Number(asset && asset.lastPrice) || 0);
       if (price <= 0) return { ok: false, error: "缺少有效价格/净值，请先刷新价格" };
       const addedShares = Math.round((amount / price) * 100) / 100;
+      const nextShares = Math.round((Math.max(0, Number(asset && asset.shares) || 0) + addedShares) * 100) / 100;
+      if (nextShares < 0) return { ok: false, error: "卖出份额超过当前持有份额" };
       return {
         ok: true,
         mode: "quoted",
         amountCny: amount,
         addedShares,
-        nextShares: Math.round((Math.max(0, Number(asset?.shares) || 0) + addedShares) * 100) / 100
+        nextShares
+      };
+    }
+
+    function calculatePaymentAccountAdjustment(account, amountCny) {
+      const amount = Number(amountCny) || 0;
+      if (!account || account.category !== "cash") return { ok: false, error: "付款账户必须是普通现金资产" };
+      const nextAmountCny = Math.round((Math.max(0, Number(account.amountCny) || 0) - amount) * 100) / 100;
+      if (nextAmountCny < 0) return { ok: false, error: "付款账户余额不足" };
+      return {
+        ok: true,
+        amountCny: amount,
+        nextAmountCny
       };
     }
 
@@ -1135,6 +1316,7 @@
     async function refreshAssetPrices() {
       if (!state.settings || state.assetPriceLoading) return;
       normalizeAssetsInSettings();
+      recordSavedAssetSnapshot();
       state.assetPriceLoading = true;
       state.assetPriceMessage = "正在刷新资产价格...";
       state.assetPriceMessageType = "info";
@@ -1167,6 +1349,7 @@
       state.assetPriceMessageType = failed ? "warning" : "success";
       state.assetPriceMessage = failed ? `已刷新 ${ok} 个资产，${failed} 个失败；失败项保留上次价格。` : `已刷新 ${ok} 个资产价格。`;
       syncDerived();
+      recordTodayProfitSnapshot();
       render();
     }
 
@@ -1211,6 +1394,8 @@
 
     function syncDerived() {
       if (!state.settings) return;
+      state.settings.portfolio = state.settings.portfolio || {};
+      state.settings.portfolio.profitHistory = normalizeProfitHistory(state.settings.portfolio.profitHistory);
       if (hasPortfolioAssets()) {
         normalizeAssetsInSettings();
         const summary = assetSummary();
@@ -1586,6 +1771,89 @@
       `;
     }
 
+    function signedMoney(value) {
+      if (state.balancesHidden) return "******";
+      const amount = Number(value) || 0;
+      const sign = amount > 0 ? "+" : amount < 0 ? "-" : "";
+      return `${sign}¥${fmtMoney(Math.abs(amount))}`;
+    }
+
+    function shortDate(value) {
+      const parts = String(value || "").split("-");
+      return parts.length === 3 ? `${parts[1]}/${parts[2]}` : value || "-";
+    }
+
+    function renderProfitChart() {
+      const days = state.profitRange === "month" ? 30 : 7;
+      const series = calculateProfitSeries(profitHistory(), days);
+      const latest = series[series.length - 1] || null;
+      let chart = '<div class="profit-chart-empty">刷新资产价格后会按日记录总资产，并逐步生成盈利走势。</div>';
+      if (series.length) {
+        const width = 900;
+        const height = 250;
+        const left = 76;
+        const right = 22;
+        const top = 24;
+        const bottom = 38;
+        const plotWidth = width - left - right;
+        const plotHeight = height - top - bottom;
+        const values = series.map((item) => item.profitCny).concat([0]);
+        let minValue = Math.min(...values);
+        let maxValue = Math.max(...values);
+        if (Math.abs(maxValue - minValue) < 1e-6) {
+          const padding = Math.max(100, Math.abs(maxValue) * 0.1);
+          minValue -= padding;
+          maxValue += padding;
+        }
+        const valueRange = maxValue - minValue;
+        const xAt = (index) => series.length === 1
+          ? left + (plotWidth / 2)
+          : left + ((index / (series.length - 1)) * plotWidth);
+        const yAt = (value) => top + (((maxValue - value) / valueRange) * plotHeight);
+        const points = series.map((item, index) => `${xAt(index).toFixed(2)},${yAt(item.profitCny).toFixed(2)}`).join(" ");
+        const lineColor = latest.profitCny >= 0 ? "#ef5350" : "#81c784";
+        const grid = [0, 0.5, 1].map((ratio) => {
+          const y = top + (ratio * plotHeight);
+          const value = maxValue - (ratio * valueRange);
+          return `
+            <line class="profit-chart-grid" x1="${left}" y1="${y}" x2="${width - right}" y2="${y}"></line>
+            <text class="profit-chart-label" x="${left - 10}" y="${y + 4}" text-anchor="end">${escapeHtml(state.balancesHidden ? "******" : signedMoney(value))}</text>
+          `;
+        }).join("");
+        const circles = series.map((item, index) => `
+          <circle class="profit-chart-point" cx="${xAt(index)}" cy="${yAt(item.profitCny)}" r="${series.length > 10 ? 3 : 4}" fill="${lineColor}">
+            <title>${escapeHtml(item.date)} · ${escapeHtml(signedMoney(item.profitCny))}</title>
+          </circle>
+        `).join("");
+        chart = `
+          <svg class="profit-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${days} 天盈利走势图">
+            ${grid}
+            <line class="profit-chart-zero" x1="${left}" y1="${yAt(0)}" x2="${width - right}" y2="${yAt(0)}"></line>
+            <polyline class="profit-chart-line" points="${points}" stroke="${lineColor}"></polyline>
+            ${circles}
+            <text class="profit-chart-label" x="${left}" y="${height - 10}" text-anchor="start">${escapeHtml(shortDate(series[0].date))}</text>
+            <text class="profit-chart-label" x="${width - right}" y="${height - 10}" text-anchor="end">${escapeHtml(shortDate(series[series.length - 1].date))}</text>
+            <text class="profit-chart-value" x="${width - right}" y="${top + 2}" text-anchor="end">区间累计 ${escapeHtml(signedMoney(latest.profitCny))}</text>
+          </svg>
+        `;
+      }
+      return `
+        <div class="profit-chart-panel">
+          <div class="profit-chart-head">
+            <div>
+              <div class="profit-chart-title">盈利走势图</div>
+              <div class="field-desc">按每日总资产快照，展示所选区间相对首个记录日的累计盈亏。</div>
+            </div>
+            <div class="profit-range" role="group" aria-label="盈利走势时间范围">
+              <button class="btn ${state.profitRange === "week" ? "active" : ""}" data-action="set-profit-range" data-range="week" aria-pressed="${state.profitRange === "week" ? "true" : "false"}">近一星期</button>
+              <button class="btn ${state.profitRange === "month" ? "active" : ""}" data-action="set-profit-range" data-range="month" aria-pressed="${state.profitRange === "month" ? "true" : "false"}">近一个月</button>
+            </div>
+          </div>
+          ${chart}
+        </div>
+      `;
+    }
+
     function renderOverview() {
       if (!state.settings) return "";
       const total = depositAmount();
@@ -1608,6 +1876,14 @@
       const goldDeg = total > 0 ? Math.max(deg, Math.min(360, deg + (gold / total) * 360)) : deg;
       const latest = state.nsdkState?.lastMarket?.benchmark || null;
       const latestLine = latest ? `<div class="market-line">推送标的：${escapeHtml(latest.name || latest.code || "-")} · 当前价格：${escapeHtml(fmtMoney(latest.price))} · 回撤幅度：${escapeHtml(fmtPercent(latest.drawdownPct))}%</div>` : "";
+      const yesterday = calculateYesterdayProfit(profitHistory());
+      const yesterdayClass = !yesterday.available || yesterday.amountCny === 0
+        ? "profit-neutral"
+        : yesterday.amountCny > 0 ? "profit-positive" : "profit-negative";
+      const yesterdayValue = yesterday.available ? signedMoney(yesterday.amountCny) : "--";
+      const yesterdayNote = yesterday.available
+        ? `较 ${shortDate(yesterday.comparedDate)} 的总资产变化`
+        : "至少需要两个记录日；刷新价格后自动积累";
       const plan = monthlyPlan();
       const freezeReasons = [];
       if (invested >= targetInvestAmount() - 1e-6) freezeReasons.push("持仓≥40%");
@@ -1634,11 +1910,18 @@
             </div>
           </div>
           <div class="overview">
-            <div class="donut-wrap">
-              <div class="donut" style="--invested-deg:${deg}deg;--gold-deg:${goldDeg}deg">
-                <div class="donut-center">
-                  <div class="donut-number">${escapeHtml(fmtPercent(exposurePct))}%</div>
-                  <div class="donut-label">纳指持仓敞口</div>
+            <div class="overview-side">
+              <div class="profit-summary">
+                <div class="stat-label">昨日盈亏</div>
+                <div class="profit-summary-value ${yesterdayClass}">${escapeHtml(yesterdayValue)}</div>
+                <div class="stat-note">${escapeHtml(yesterdayNote)}</div>
+              </div>
+              <div class="donut-wrap">
+                <div class="donut" style="--invested-deg:${deg}deg;--gold-deg:${goldDeg}deg">
+                  <div class="donut-center">
+                    <div class="donut-number">${escapeHtml(fmtPercent(exposurePct))}%</div>
+                    <div class="donut-label">纳指持仓敞口</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1684,6 +1967,7 @@
               </div>
             </div>
           </div>
+          ${renderProfitChart()}
         </section>
       `;
     }
@@ -1844,12 +2128,28 @@
       `;
     }
 
+    function selectedAssetPaymentAccount() {
+      if (state.assetPaymentAccountIndex === "") return null;
+      const index = Number(state.assetPaymentAccountIndex);
+      const raw = portfolioAssets()[index];
+      if (!Number.isInteger(index) || index === state.assetAmountIndex || raw?.category !== "cash") return null;
+      return { index, asset: normalizeAsset(raw, index) };
+    }
+
     function assetAmountPreviewText(asset, result) {
       if (!result.ok) return result.error;
       if (result.mode === "cash") {
-        return `当前固定金额：¥${fmtMoney(asset.amountCny)} · 增加后：¥${fmtMoney(result.nextAmountCny)}`;
+        return `当前固定金额：¥${fmtMoney(asset.amountCny)} · 调整后：¥${fmtMoney(result.nextAmountCny)}`;
       }
-      return `当前价格/净值：¥${fmtMoney(asset.lastPrice)} · 预计新增份额：${moneyFormatter.format(result.addedShares)} · 更新后份额：${moneyFormatter.format(result.nextShares)}`;
+      const action = result.addedShares >= 0 ? "增加" : "减少";
+      return `当前价格/净值：¥${fmtMoney(asset.lastPrice)} · 预计${action}份额：${moneyFormatter.format(Math.abs(result.addedShares))} · 调整后份额：${moneyFormatter.format(result.nextShares)}`;
+    }
+
+    function paymentAccountPreviewText(payment, result) {
+      if (!payment) return "未选择付款账户，现金余额不会联动。";
+      if (!result.ok) return result.error;
+      const action = result.amountCny >= 0 ? "扣款后" : "回款后";
+      return `${payment.asset.name}：当前 ¥${fmtMoney(payment.asset.amountCny)} · ${action} ¥${fmtMoney(result.nextAmountCny)}`;
     }
 
     function renderAssetAmountModal() {
@@ -1858,6 +2158,14 @@
       if (!raw) return "";
       const asset = normalizeAsset(raw, state.assetAmountIndex);
       const result = calculateAssetAddition(asset, state.assetAmountInput);
+      const paymentAccounts = portfolioAssets()
+        .map((item, index) => ({ index, asset: normalizeAsset(item, index) }))
+        .filter(({ index, asset }) => index !== state.assetAmountIndex && asset.category === "cash");
+      const payment = selectedAssetPaymentAccount();
+      const paymentResult = payment
+        ? calculatePaymentAccountAdjustment(payment.asset, state.assetAmountInput)
+        : { ok: true };
+      const canApply = result.ok && paymentResult.ok;
       return `
         <div class="modal-backdrop" data-action="modal-backdrop">
           <div class="modal" role="dialog" aria-modal="true" aria-labelledby="assetAmountTitle">
@@ -1865,14 +2173,24 @@
               <h2 id="assetAmountTitle" class="modal-title">新增金额 · ${escapeHtml(asset.name)}</h2>
               <button class="btn" data-action="close-asset-amount" aria-label="关闭">关闭</button>
             </div>
-            <div class="form-item">
-              <label for="assetAmountInput">新增金额（元）</label>
-              <input id="assetAmountInput" data-asset-amount type="number" min="0" step="100" value="${escapeHtml(state.assetAmountInput)}" autofocus />
-              <div id="assetAmountPreview" class="${result.ok ? "field-desc" : "json-error"}">${escapeHtml(assetAmountPreviewText(asset, result))}</div>
+            <div class="dialog-grid">
+              <div class="form-item">
+                <label for="assetAmountInput">新增金额（元，支持负数）</label>
+                <input id="assetAmountInput" data-asset-amount type="number" step="100" value="${escapeHtml(state.assetAmountInput)}" autofocus />
+                <div id="assetAmountPreview" class="${result.ok ? "field-desc" : "json-error"}">${escapeHtml(assetAmountPreviewText(asset, result))}</div>
+              </div>
+              <div class="form-item">
+                <label for="assetPaymentAccount">付款账户（可不选）</label>
+                <select id="assetPaymentAccount" data-asset-payment-account>
+                  <option value="">不选择付款账户</option>
+                  ${paymentAccounts.map(({ index, asset: account }) => `<option value="${index}" ${String(state.assetPaymentAccountIndex) === String(index) ? "selected" : ""}>${escapeHtml(account.name)} · ¥${escapeHtml(fmtMoney(account.amountCny))}</option>`).join("")}
+                </select>
+                <div id="assetPaymentPreview" class="${paymentResult.ok ? "field-desc" : "json-error"}">${escapeHtml(paymentAccountPreviewText(payment, paymentResult))}</div>
+              </div>
             </div>
             <div class="modal-foot">
               <button class="btn" data-action="close-asset-amount">取消</button>
-              <button id="applyAssetAmountBtn" class="btn primary" data-action="apply-asset-amount" ${result.ok ? "" : "disabled"}>确认新增</button>
+              <button id="applyAssetAmountBtn" class="btn primary" data-action="apply-asset-amount" ${canApply ? "" : "disabled"}>确认调整</button>
             </div>
           </div>
         </div>
@@ -2357,6 +2675,7 @@
       deepSet(state.settings, "portfolio.otherCashCny", Math.round(previewOther * 100) / 100);
       state.adjustOpen = false;
       syncDerived();
+      recordTodayProfitSnapshot();
       render();
     }
 
@@ -2394,6 +2713,7 @@
       }, assets.length));
       state.settings.portfolio.assets = assets;
       syncDerived();
+      recordTodayProfitSnapshot();
       render();
     }
 
@@ -2403,6 +2723,7 @@
       assets.splice(index, 1);
       state.settings.portfolio.assets = assets;
       syncDerived();
+      recordTodayProfitSnapshot();
       render();
     }
 
@@ -2410,6 +2731,7 @@
       if (!Number.isInteger(index) || !portfolioAssets()[index]) return;
       state.assetAmountIndex = index;
       state.assetAmountInput = 0;
+      state.assetPaymentAccountIndex = "";
       state.assetAmountOpen = true;
       render();
     }
@@ -2418,6 +2740,7 @@
       state.assetAmountOpen = false;
       state.assetAmountIndex = -1;
       state.assetAmountInput = 0;
+      state.assetPaymentAccountIndex = "";
       render();
     }
 
@@ -2427,15 +2750,25 @@
       if (!Number.isInteger(index) || !assets[index]) return;
       const asset = normalizeAsset(assets[index], index);
       const result = calculateAssetAddition(asset, state.assetAmountInput);
-      if (!result.ok) return;
+      const payment = selectedAssetPaymentAccount();
+      const paymentResult = payment
+        ? calculatePaymentAccountAdjustment(payment.asset, state.assetAmountInput)
+        : { ok: true };
+      if (!result.ok || !paymentResult.ok) return;
       if (result.mode === "cash") asset.amountCny = result.nextAmountCny;
       else asset.shares = result.nextShares;
       assets[index] = asset;
+      if (payment) {
+        payment.asset.amountCny = paymentResult.nextAmountCny;
+        assets[payment.index] = payment.asset;
+      }
       state.settings.portfolio.assets = assets.map(normalizeAsset);
       state.assetAmountOpen = false;
       state.assetAmountIndex = -1;
       state.assetAmountInput = 0;
+      state.assetPaymentAccountIndex = "";
       syncDerived();
+      recordTodayProfitSnapshot();
       render();
     }
 
@@ -2444,13 +2777,22 @@
       if (!raw) return;
       const asset = normalizeAsset(raw, state.assetAmountIndex);
       const result = calculateAssetAddition(asset, state.assetAmountInput);
+      const payment = selectedAssetPaymentAccount();
+      const paymentResult = payment
+        ? calculatePaymentAccountAdjustment(payment.asset, state.assetAmountInput)
+        : { ok: true };
       const preview = document.getElementById("assetAmountPreview");
+      const paymentPreview = document.getElementById("assetPaymentPreview");
       const applyBtn = document.getElementById("applyAssetAmountBtn");
       if (preview) {
         preview.textContent = assetAmountPreviewText(asset, result);
         preview.className = result.ok ? "field-desc" : "json-error";
       }
-      if (applyBtn) applyBtn.disabled = !result.ok;
+      if (paymentPreview) {
+        paymentPreview.textContent = paymentAccountPreviewText(payment, paymentResult);
+        paymentPreview.className = paymentResult.ok ? "field-desc" : "json-error";
+      }
+      if (applyBtn) applyBtn.disabled = !result.ok || !paymentResult.ok;
     }
 
     function commitAssetField(element, options = {}) {
@@ -2492,6 +2834,7 @@
       }
       state.settings.portfolio.assets = assets.map(normalizeAsset);
       syncDerived();
+      recordTodayProfitSnapshot();
       const shouldRender = options.render !== false && JSON.stringify(assets[index]) !== old;
       if (shouldRender) render();
     }
@@ -2508,7 +2851,7 @@
       else if (action === "reset-defaults") await resetDefaults();
       else if (action === "export-json") await exportJson();
       else if (action === "open-github") { state.githubSaveOpen = true; render(); }
-      else if (action === "close-github" || action === "modal-backdrop") { state.githubSaveOpen = false; state.adjustOpen = false; state.otherDetailOpen = false; state.assetAmountOpen = false; state.assetAmountIndex = -1; state.assetAmountInput = 0; render(); }
+      else if (action === "close-github" || action === "modal-backdrop") { state.githubSaveOpen = false; state.adjustOpen = false; state.otherDetailOpen = false; state.assetAmountOpen = false; state.assetAmountIndex = -1; state.assetAmountInput = 0; state.assetPaymentAccountIndex = ""; render(); }
       else if (action === "dispatch-github") await dispatchGithubSave();
       else if (action === "open-adjust") { state.addDepositDelta = 0; state.addNasdaqInvestDelta = 0; state.addReserveDelta = 0; state.addOtherCashDelta = 0; state.adjustOpen = true; render(); }
       else if (action === "close-adjust") { state.adjustOpen = false; render(); }
@@ -2516,6 +2859,7 @@
       else if (action === "close-other-detail") { state.otherDetailOpen = false; render(); }
       else if (action === "apply-adjust") applyAdjust();
       else if (action === "toggle-balances") { state.balancesHidden = !state.balancesHidden; render(); }
+      else if (action === "set-profit-range") { state.profitRange = target.dataset.range === "month" ? "month" : "week"; render(); }
       else if (action === "add-asset") addAsset();
       else if (action === "open-asset-amount") openAssetAmount(Number(target.dataset.assetIndex));
       else if (action === "close-asset-amount") closeAssetAmount();
@@ -2537,6 +2881,11 @@
       const el = event.target;
       if (el.matches("[data-action='tier-toggle']")) {
         setTierExecuted(el.dataset.tier, el.checked);
+        return;
+      }
+      if (el.matches("[data-asset-payment-account]")) {
+        state.assetPaymentAccountIndex = el.value;
+        updateAssetAmountPreview();
         return;
       }
       if (el.matches("[data-asset-field]")) {

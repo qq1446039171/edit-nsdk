@@ -8,7 +8,7 @@
     "dev": "npm run app:start",
     "build": "echo \"web is static HTML; no build step required\"",
     "build:pages": "echo \"web is static HTML; no build step required\"",
-    "test": "node web/tests/asset-table-layout.test.js && node web/tests/asset-add-amount.test.js && node web/tests/github-target.test.js && npm --prefix app/nsdk test",
+    "test": "node web/tests/asset-table-layout.test.js && node web/tests/asset-add-amount.test.js && node web/tests/profit-history.test.js && node web/tests/github-target.test.js && npm --prefix app/nsdk test",
     "app:start": "npm --prefix app/nsdk run start",
     "app:restart": "npm --prefix app/nsdk run restart",
     "app:run-once-local": "npm run app:run-once -- once",

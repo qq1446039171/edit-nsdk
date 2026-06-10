@@ -10,6 +10,9 @@ assert.match(html, /state\.assetRowsCollapsed \?/, 'asset section should render 
 assert.match(html, /balancesHidden:\s*false/, 'balances should start visible');
 assert.match(html, /data-action="toggle-balances"/, 'overview should include an eye button to hide balances');
 assert.match(html, /state\.balancesHidden \? "\*\*\*\*\*\*"/, 'money formatter should mask balances when hidden');
+assert.match(html, /昨日盈亏/, 'overview should display yesterday profit and loss');
+assert.match(html, /data-action="set-profit-range"/, 'profit chart should include a range switch');
+assert.match(html, /renderProfitChart/, 'overview should render a profit chart');
 assert.match(html, /categoryAmount\("gold"\)/, 'overview should surface gold allocation');
 assert.match(html, /categoryAmount\("stock"\)/, 'overview should surface other stock and ETF allocation');
 assert.match(html, /--gold-deg/, 'donut should include gold allocation as a visible segment');
@@ -18,6 +21,8 @@ assert.match(html, /renderOtherDetailModal/, 'other asset details should render 
 assert.match(html, /data-action="open-asset-amount"/, 'each asset row should include an add amount action');
 assert.match(html, /renderAssetAmountModal/, 'asset amount entry should render in a modal');
 assert.match(html, /function calculateAssetAddition\(asset, amountCny\)/, 'asset amount entry should use a dedicated calculation function');
+assert.match(html, /data-asset-payment-account/, 'asset amount modal should include an optional payment account');
+assert.match(html, /asset\.category === "cash"/, 'payment account options should only include ordinary cash assets');
 assert.match(html, /其他资产与现金/, 'overview should label the combined non-NASDAQ bucket clearly');
 assert.doesNotMatch(html, /<div class="stat-label">黄金<\/div>/, 'gold should not be shown as a standalone overview card');
 assert.doesNotMatch(html, /<div class="stat-label">其他股票\/ETF<\/div>/, 'other stock and ETF should not be shown as a standalone overview card');
