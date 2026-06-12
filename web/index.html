@@ -255,9 +255,37 @@
       line-height: 1.18;
       font-weight: 850;
     }
+    .profit-summary .btn {
+      min-height: 44px;
+      padding: 8px 12px;
+    }
     .profit-positive { color: var(--red); }
     .profit-negative { color: var(--green-soft); }
     .profit-neutral { color: var(--text); }
+    .profit-detail-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border: 1px solid rgba(129, 199, 132, 0.2);
+      border-radius: 8px;
+      background: rgba(10, 14, 23, 0.45);
+    }
+    .profit-detail-total {
+      font-size: 20px;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .profit-detail-table-wrap { overflow-x: auto; }
+    .profit-detail-table { min-width: 660px; }
+    .profit-detail-table td:nth-child(n + 3),
+    .profit-detail-table th:nth-child(n + 3) {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
     .profit-chart-panel {
       margin-top: 20px;
       border: 1px solid rgba(76, 175, 80, 0.16);
@@ -579,6 +607,32 @@
     }
     .form-item { display: grid; gap: 7px; }
     label { color: var(--muted); font-size: 13px; font-weight: 800; }
+    .credential-option {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid rgba(129, 199, 132, 0.2);
+      border-radius: 8px;
+      background: rgba(10, 14, 23, 0.42);
+      color: var(--text);
+      font-weight: 700;
+      line-height: 1.5;
+    }
+    .credential-option input {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      flex: 0 0 auto;
+    }
+    .credential-option small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
 
     .drawer-backdrop {
       place-items: stretch end;
@@ -625,6 +679,7 @@
       .section { padding: 15px; }
       .actions, .modal-foot { display: grid; grid-template-columns: 1fr; }
       .btn { width: 100%; }
+      .stat-head .btn { width: auto; flex: 0 0 auto; }
       .field-head { display: grid; }
       .field-key { text-align: left; }
       .profit-chart-head { display: grid; }
@@ -726,6 +781,7 @@
     };
 
     const STORAGE_KEY = "tz-nsdk-configurator";
+    const GITHUB_TOKEN_STORAGE_KEY = `${STORAGE_KEY}:github-token`;
     const TIERS = ["10", "15", "20", "25"];
     const moneyFormatter = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 });
     const assetCategories = [
@@ -771,9 +827,12 @@
       githubRepoName: projectGithub.repo,
       githubBranch: projectGithub.branch,
       githubToken: "",
+      githubRememberToken: true,
+      githubTokenRemembered: false,
       githubCommitMessage: "chore(config): update settings from web",
       adjustOpen: false,
       otherDetailOpen: false,
+      yesterdayDetailOpen: false,
       assetAmountOpen: false,
       assetAmountIndex: -1,
       assetAmountInput: 0,
@@ -1058,10 +1117,26 @@
           if (!entry || !/^\d{4}-\d{2}-\d{2}$/.test(String(entry.date || ""))) continue;
           const totalAssetsCny = Number(entry.totalAssetsCny);
           if (!Number.isFinite(totalAssetsCny) || totalAssetsCny < 0) continue;
-          byDate[entry.date] = {
+          const normalized = {
             date: entry.date,
             totalAssetsCny: Math.round(totalAssetsCny * 100) / 100
           };
+          if (Array.isArray(entry.assets)) {
+            const assets = entry.assets.map((asset) => {
+              if (!asset || !String(asset.id || "").trim()) return null;
+              const id = String(asset.id).trim();
+              return {
+                id,
+                name: String(asset.name || id).trim(),
+                category: String(asset.category || "stock").trim(),
+                shares: Math.max(0, Number(asset.shares) || 0),
+                lastPrice: Math.max(0, Number(asset.lastPrice) || 0),
+                marketValueCny: Math.max(0, Math.round((Number(asset.marketValueCny) || 0) * 100) / 100)
+              };
+            }).filter(Boolean);
+            if (assets.length) normalized.assets = assets;
+          }
+          byDate[entry.date] = normalized;
         }
       }
       return Object.keys(byDate).sort().map((date) => byDate[date]).slice(-366);
@@ -1095,6 +1170,45 @@
       };
     }
 
+    function calculateAssetProfitDetails(entries) {
+      const history = normalizeProfitHistory(entries);
+      if (history.length < 2) return { available: false, comparedDate: "", currentDate: "", totalProfitCny: 0, rows: [] };
+      const current = history[history.length - 1];
+      const previous = history[history.length - 2];
+      if (!Array.isArray(current.assets) || !Array.isArray(previous.assets)) {
+        return { available: false, comparedDate: previous.date, currentDate: current.date, totalProfitCny: 0, rows: [] };
+      }
+      const previousById = {};
+      for (const asset of previous.assets) previousById[asset.id] = asset;
+      const rows = [];
+      for (const asset of current.assets) {
+        if (asset.category === "cash" || asset.category === "nasdaq_reserve_cash") continue;
+        const before = previousById[asset.id];
+        const shares = Math.max(0, Number(asset.shares) || 0);
+        const previousPrice = Number(before && before.lastPrice);
+        const currentPrice = Number(asset.lastPrice);
+        if (!before || shares <= 0 || !(previousPrice > 0) || !(currentPrice > 0)) continue;
+        rows.push({
+          id: asset.id,
+          name: asset.name,
+          category: asset.category,
+          shares,
+          previousPrice,
+          currentPrice,
+          profitCny: Math.round((shares * (currentPrice - previousPrice)) * 100) / 100
+        });
+      }
+      rows.sort((a, b) => Math.abs(b.profitCny) - Math.abs(a.profitCny));
+      const totalProfitCny = Math.round(rows.reduce((sum, row) => sum + row.profitCny, 0) * 100) / 100;
+      return {
+        available: rows.length > 0,
+        comparedDate: previous.date,
+        currentDate: current.date,
+        totalProfitCny,
+        rows
+      };
+    }
+
     function localDateKey(value = new Date()) {
       const date = value instanceof Date ? value : new Date(value);
       if (!Number.isFinite(date.getTime())) return "";
@@ -1113,12 +1227,29 @@
       return normalizeProfitHistory(state.settings?.portfolio?.profitHistory);
     }
 
+    function assetProfitSnapshotRows() {
+      return portfolioAssets()
+        .map((asset, index) => normalizeAsset(asset, index))
+        .filter((asset) => !isCashAsset(asset))
+        .map((asset) => ({
+          id: asset.id,
+          name: asset.name,
+          category: asset.category,
+          shares: asset.shares,
+          lastPrice: asset.lastPrice,
+          marketValueCny: Math.round(assetValue(asset) * 100) / 100
+        }));
+    }
+
     function recordProfitSnapshot(date, totalAssetsCny) {
       if (!state.settings || !/^\d{4}-\d{2}-\d{2}$/.test(String(date || ""))) return;
       const total = Number(totalAssetsCny);
       if (!Number.isFinite(total) || total < 0) return;
       const next = profitHistory();
-      next.push({ date, totalAssetsCny: total });
+      const snapshot = { date, totalAssetsCny: total };
+      const assets = assetProfitSnapshotRows();
+      if (assets.length) snapshot.assets = assets;
+      next.push(snapshot);
       state.settings.portfolio.profitHistory = normalizeProfitHistory(next);
     }
 
@@ -1475,6 +1606,36 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
     }
 
+    function loadRememberedGithubToken() {
+      try {
+        return String(localStorage.getItem(GITHUB_TOKEN_STORAGE_KEY) || "").trim();
+      } catch {
+        return "";
+      }
+    }
+
+    function saveRememberedGithubToken(token) {
+      const value = String(token || "").trim();
+      if (!value) return false;
+      try {
+        localStorage.setItem(GITHUB_TOKEN_STORAGE_KEY, value);
+        state.githubTokenRemembered = true;
+        return true;
+      } catch {
+        state.githubTokenRemembered = false;
+        return false;
+      }
+    }
+
+    function clearRememberedGithubToken() {
+      try {
+        localStorage.removeItem(GITHUB_TOKEN_STORAGE_KEY);
+      } catch {
+        // Browser storage may be unavailable.
+      }
+      state.githubTokenRemembered = false;
+    }
+
     async function addVersionSnapshot(reason) {
       const stored = loadStoredState();
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -1600,7 +1761,7 @@
           <div class="actions">
             <button class="btn primary" data-action="open-file">打开文件</button>
             <button class="btn success" data-action="save-file" ${state.settings && dirty() && localValidation().ok ? "" : "disabled"}>保存</button>
-            <button class="btn success" data-action="open-github" ${state.settings ? "" : "disabled"}>保存到 GitHub</button>
+            <button class="btn success" data-action="open-github" ${state.settings && !state.githubSaving ? "" : "disabled"}>${state.githubSaving ? "正在保存..." : state.githubTokenRemembered ? "直接保存到 GitHub" : "保存到 GitHub"}</button>
 
           </div>
           ${renderNotice(state.saveMessage, state.saveMessageType)}
@@ -1912,7 +2073,10 @@
           <div class="overview">
             <div class="overview-side">
               <div class="profit-summary">
-                <div class="stat-label">昨日盈亏</div>
+                <div class="stat-head">
+                  <div class="stat-label">昨日盈亏</div>
+                  <button class="btn" data-action="open-yesterday-detail">明细</button>
+                </div>
                 <div class="profit-summary-value ${yesterdayClass}">${escapeHtml(yesterdayValue)}</div>
                 <div class="stat-note">${escapeHtml(yesterdayNote)}</div>
               </div>
@@ -2066,9 +2230,17 @@
               <div class="form-item"><label for="githubOwner">Repo Owner</label><input id="githubOwner" data-pref="githubRepoOwner" value="${escapeHtml(state.githubRepoOwner)}" placeholder="qq1446039171" readonly /></div>
               <div class="form-item"><label for="githubRepo">Repo Name</label><input id="githubRepo" data-pref="githubRepoName" value="${escapeHtml(state.githubRepoName)}" placeholder="edit-nsdk" readonly /></div>
               <div class="form-item"><label for="githubBranch">Target Branch</label><input id="githubBranch" data-pref="githubBranch" value="${escapeHtml(state.githubBranch)}" placeholder="master" readonly /></div>
-              <div class="form-item"><label for="githubToken">GitHub Personal Access Token</label><input id="githubToken" data-pref="githubToken" type="password" value="${escapeHtml(state.githubToken)}" placeholder="需要 workflow 权限" /></div>
+              <div class="form-item"><label for="githubToken">GitHub Personal Access Token</label><input id="githubToken" data-github-token type="password" value="${escapeHtml(state.githubToken)}" placeholder="需要 Actions 写入权限" autocomplete="off" /></div>
               <div class="form-item" style="grid-column:1/-1"><label for="githubCommit">Commit Message</label><input id="githubCommit" data-pref="githubCommitMessage" value="${escapeHtml(state.githubCommitMessage)}" placeholder="chore(config): update settings from web" /></div>
+              <label class="credential-option">
+                <input data-github-remember type="checkbox" ${state.githubRememberToken ? "checked" : ""} />
+                <span>
+                  在此设备记住 Token，下次点击时直接保存
+                  <small>仅保存在当前浏览器的站点存储中，不写入 settings.json、日志或 GitHub 仓库；请只在自己的设备上使用。</small>
+                </span>
+              </label>
             </div>
+            ${state.saveMessageType === "error" ? renderNotice(state.saveMessage, state.saveMessageType) : ""}
             ${renderNotice("此操作会调用 GitHub Actions workflow_dispatch，把当前 settings.json 写入仓库 Config/settings.json。", "info")}
             <div class="modal-foot">
               <button class="btn" data-action="close-github">取消</button>
@@ -2224,6 +2396,48 @@
       `;
     }
 
+    function renderYesterdayDetailModal() {
+      if (!state.yesterdayDetailOpen) return "";
+      const detail = calculateAssetProfitDetails(profitHistory());
+      const totalClass = detail.totalProfitCny === 0
+        ? "profit-neutral"
+        : detail.totalProfitCny > 0 ? "profit-positive" : "profit-negative";
+      return `
+        <div class="modal-backdrop" data-action="modal-backdrop">
+          <div class="modal" role="dialog" aria-modal="true" aria-labelledby="yesterdayDetailTitle">
+            <div class="modal-head">
+              <h2 id="yesterdayDetailTitle" class="modal-title">昨日盈亏明细</h2>
+              <button class="btn" data-action="close-yesterday-detail" aria-label="关闭">关闭</button>
+            </div>
+            ${detail.available ? `
+              <div class="profit-detail-summary">
+                <div>
+                  <div class="stat-label">${escapeHtml(shortDate(detail.comparedDate))} 至 ${escapeHtml(shortDate(detail.currentDate))}</div>
+                  <div class="field-desc">按当前持有份额和两个记录日的价格变化估算</div>
+                </div>
+                <div class="profit-detail-total ${totalClass}">${escapeHtml(signedMoney(detail.totalProfitCny))}</div>
+              </div>
+              <div class="profit-detail-table-wrap">
+                <table class="data-table profit-detail-table">
+                  <thead><tr><th>名称</th><th>分类</th><th>昨日价格</th><th>当前价格</th><th>盈亏金额</th></tr></thead>
+                  <tbody>
+                    ${detail.rows.map((row) => {
+                      const rowClass = row.profitCny === 0 ? "profit-neutral" : row.profitCny > 0 ? "profit-positive" : "profit-negative";
+                      return `<tr><td>${escapeHtml(row.name)}</td><td>${escapeHtml(categoryLabel(row.category))}</td><td>¥${escapeHtml(fmtMoney(row.previousPrice))}</td><td>¥${escapeHtml(fmtMoney(row.currentPrice))}</td><td class="${rowClass}">${escapeHtml(signedMoney(row.profitCny))}</td></tr>`;
+                    }).join("")}
+                  </tbody>
+                </table>
+              </div>
+            ` : `
+              <div class="empty">
+                需要连续两个记录日的资产价格快照。保存配置，并在下一交易日刷新价格后即可查看逐项盈亏。
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
     function renderVersionsDrawer() {
       if (!state.versionsOpen) return "";
       const stored = loadStoredState();
@@ -2296,6 +2510,7 @@
         ${renderGithubModal()}
         ${renderAdjustModal()}
         ${renderAssetAmountModal()}
+        ${renderYesterdayDetailModal()}
         ${renderOtherDetailModal()}
         ${renderVersionsDrawer()}
       `;
@@ -2550,6 +2765,22 @@
       return btoa(unescape(encodeURIComponent(text)));
     }
 
+    async function openGithubSave() {
+      state.saveMessage = "";
+      const rememberedToken = loadRememberedGithubToken();
+      if (rememberedToken) {
+        state.githubToken = rememberedToken;
+        state.githubTokenRemembered = true;
+        state.githubRememberToken = true;
+        await dispatchGithubSave();
+        return;
+      }
+      state.githubToken = "";
+      state.githubTokenRemembered = false;
+      state.githubSaveOpen = true;
+      render();
+    }
+
     async function dispatchGithubSave() {
       if (!state.settings) return;
       enforceProjectGithubTarget();
@@ -2583,15 +2814,29 @@
         });
         if (!res.ok) {
           const text = await res.text();
-          throw new Error(`GitHub API ${res.status}: ${text || "dispatch_failed"}`);
+          const error = new Error(`GitHub API ${res.status}: ${text || "dispatch_failed"}`);
+          error.status = res.status;
+          throw error;
         }
+        const remembered = state.githubRememberToken ? saveRememberedGithubToken(state.githubToken) : false;
+        if (!state.githubRememberToken) clearRememberedGithubToken();
         state.saveMessageType = "success";
-        state.saveMessage = "已触发保存到仓库 workflow，请在 GitHub Actions 中查看执行结果。";
+        state.saveMessage = state.githubRememberToken && !remembered
+          ? "已触发保存 workflow，但浏览器未允许记住 Token；下次仍需输入。"
+          : "已触发保存到仓库 workflow，请在 GitHub Actions 中查看执行结果。";
         state.githubSaveOpen = false;
+        state.githubToken = "";
         await addLog({ action: "githubSaveDispatch", ok: true, reason: "", bytes: JSON.stringify(payload).length });
       } catch (error) {
         state.saveMessageType = "error";
-        state.saveMessage = `保存到 GitHub 失败：${error?.message || String(error)}`;
+        if (error?.status === 401) {
+          clearRememberedGithubToken();
+          state.githubToken = "";
+          state.githubSaveOpen = true;
+          state.saveMessage = "GitHub Token 已失效或被撤销，请输入新的 Token。";
+        } else {
+          state.saveMessage = `保存到 GitHub 失败：${error?.message || String(error)}`;
+        }
         await addLog({ action: "githubSaveDispatch", ok: false, reason: state.saveMessage, bytes: 0 });
       } finally {
         state.githubSaving = false;
@@ -2850,13 +3095,15 @@
       else if (action === "reset-loaded") resetToLoaded();
       else if (action === "reset-defaults") await resetDefaults();
       else if (action === "export-json") await exportJson();
-      else if (action === "open-github") { state.githubSaveOpen = true; render(); }
-      else if (action === "close-github" || action === "modal-backdrop") { state.githubSaveOpen = false; state.adjustOpen = false; state.otherDetailOpen = false; state.assetAmountOpen = false; state.assetAmountIndex = -1; state.assetAmountInput = 0; state.assetPaymentAccountIndex = ""; render(); }
+      else if (action === "open-github") await openGithubSave();
+      else if (action === "close-github" || action === "modal-backdrop") { state.githubSaveOpen = false; state.adjustOpen = false; state.otherDetailOpen = false; state.yesterdayDetailOpen = false; state.assetAmountOpen = false; state.assetAmountIndex = -1; state.assetAmountInput = 0; state.assetPaymentAccountIndex = ""; render(); }
       else if (action === "dispatch-github") await dispatchGithubSave();
       else if (action === "open-adjust") { state.addDepositDelta = 0; state.addNasdaqInvestDelta = 0; state.addReserveDelta = 0; state.addOtherCashDelta = 0; state.adjustOpen = true; render(); }
       else if (action === "close-adjust") { state.adjustOpen = false; render(); }
       else if (action === "open-other-detail") { state.otherDetailOpen = true; render(); }
       else if (action === "close-other-detail") { state.otherDetailOpen = false; render(); }
+      else if (action === "open-yesterday-detail") { state.yesterdayDetailOpen = true; render(); }
+      else if (action === "close-yesterday-detail") { state.yesterdayDetailOpen = false; render(); }
       else if (action === "apply-adjust") applyAdjust();
       else if (action === "toggle-balances") { state.balancesHidden = !state.balancesHidden; render(); }
       else if (action === "set-profit-range") { state.profitRange = target.dataset.range === "month" ? "month" : "week"; render(); }
@@ -2881,6 +3128,10 @@
       const el = event.target;
       if (el.matches("[data-action='tier-toggle']")) {
         setTierExecuted(el.dataset.tier, el.checked);
+        return;
+      }
+      if (el.matches("[data-github-remember]")) {
+        state.githubRememberToken = el.checked;
         return;
       }
       if (el.matches("[data-asset-payment-account]")) {
@@ -2911,6 +3162,8 @@
       } else if (el.matches("[data-asset-amount]")) {
         state.assetAmountInput = Number(el.value) || 0;
         updateAssetAmountPreview();
+      } else if (el.matches("[data-github-token]")) {
+        state.githubToken = el.value;
       } else if (el.matches("[data-pref]")) {
         state[el.dataset.pref] = el.value;
         persistGithubPrefs();
@@ -2943,6 +3196,7 @@
       state.githubRepoOwner = prefs.owner || projectGithub.owner;
       state.githubRepoName = prefs.repo || projectGithub.repo;
       state.githubBranch = prefs.branch || projectGithub.branch;
+      state.githubTokenRemembered = Boolean(loadRememberedGithubToken());
       enforceProjectGithubTarget();
       persistGithubPrefs();
       state.githubCommitMessage = prefs.commitMessage || "chore(config): update settings from web";

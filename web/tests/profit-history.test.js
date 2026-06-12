@@ -13,6 +13,7 @@ function extract(name) {
 const normalizeProfitHistory = eval(`(${extract('normalizeProfitHistory')})`);
 const calculateProfitSeries = eval(`(${extract('calculateProfitSeries')})`);
 const calculateYesterdayProfit = eval(`(${extract('calculateYesterdayProfit')})`);
+const calculateAssetProfitDetails = eval(`(${extract('calculateAssetProfitDetails')})`);
 
 const history = normalizeProfitHistory([
   { date: '2026-06-01', totalAssetsCny: 100000 },
@@ -47,5 +48,45 @@ assert.deepStrictEqual(calculateProfitSeries(history, 30), [
 ]);
 
 assert.strictEqual(calculateYesterdayProfit(history.slice(0, 1)).available, false);
+
+const assetHistory = normalizeProfitHistory([
+  {
+    date: '2026-06-10',
+    totalAssetsCny: 100000,
+    assets: [
+      { id: 'fund-a', name: '基金A', category: 'nasdaq', shares: 100, lastPrice: 2, marketValueCny: 200 },
+      { id: 'cash-a', name: '现金', category: 'cash', shares: 0, lastPrice: 0, marketValueCny: 1000 },
+    ],
+  },
+  {
+    date: '2026-06-11',
+    totalAssetsCny: 100150,
+    assets: [
+      { id: 'fund-a', name: '基金A', category: 'nasdaq', shares: 100, lastPrice: 2.5, marketValueCny: 250 },
+      { id: 'fund-b', name: '基金B', category: 'stock', shares: 50, lastPrice: 3, marketValueCny: 150 },
+      { id: 'cash-a', name: '现金', category: 'cash', shares: 0, lastPrice: 0, marketValueCny: 1000 },
+    ],
+  },
+]);
+
+assert.deepStrictEqual(calculateAssetProfitDetails(assetHistory), {
+  available: true,
+  comparedDate: '2026-06-10',
+  currentDate: '2026-06-11',
+  totalProfitCny: 50,
+  rows: [
+    {
+      id: 'fund-a',
+      name: '基金A',
+      category: 'nasdaq',
+      shares: 100,
+      previousPrice: 2,
+      currentPrice: 2.5,
+      profitCny: 50,
+    },
+  ],
+});
+
+assert.strictEqual(calculateAssetProfitDetails(history).available, false);
 
 console.log('profit-history.test.js passed');

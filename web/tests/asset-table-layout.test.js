@@ -11,6 +11,8 @@ assert.match(html, /balancesHidden:\s*false/, 'balances should start visible');
 assert.match(html, /data-action="toggle-balances"/, 'overview should include an eye button to hide balances');
 assert.match(html, /state\.balancesHidden \? "\*\*\*\*\*\*"/, 'money formatter should mask balances when hidden');
 assert.match(html, /昨日盈亏/, 'overview should display yesterday profit and loss');
+assert.match(html, /data-action="open-yesterday-detail"/, 'yesterday profit should expose an asset detail button');
+assert.match(html, /renderYesterdayDetailModal/, 'asset profit details should render in a modal');
 assert.match(html, /data-action="set-profit-range"/, 'profit chart should include a range switch');
 assert.match(html, /renderProfitChart/, 'overview should render a profit chart');
 assert.match(html, /categoryAmount\("gold"\)/, 'overview should surface gold allocation');
