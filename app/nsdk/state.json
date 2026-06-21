@@ -133,11 +133,11 @@
     },
     "buy": {
       "code": "513100",
-      "name": "纳指ETF",
-      "price": null,
-      "pct": null
+      "name": "纳指ETF国泰",
+      "price": 2.266,
+      "pct": -0.57
     },
-    "at": "2026-06-21T07:04:32.094Z"
+    "at": "2026-06-21T10:40:47.833Z"
   },
   "freeze": {
     "active": false,
