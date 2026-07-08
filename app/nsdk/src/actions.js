@@ -15,8 +15,20 @@ const { getLatestDaily, getOneYearHighDaily } = require('./market/stooq');
 const { getLatestDaily: getLatestDailyFinnhub, getOneYearHighDaily: getOneYearHighDailyFinnhub } = require('./market/finnhub');
 const { getVixLast7 } = require('./market/vix');
 const { computeTargets, computeDrawdown, buildTierTable, nextTierToTrigger } = require('./plan');
+const { applyFreshHoldings } = require('./market/holdings');
 const { logEvent } = require('./logger');
 const { push } = require('./push');
+
+// 推送前刷新持仓最新价（与网页同源的东财接口），让手机推送的纳指金额与网页一致。
+// 仅内存刷新，不回写 settings.json；全部失败则保留旧价、优雅降级继续推送。
+const refreshHoldingsBeforePush = async (cfg) => {
+  try {
+    const { ok, failed } = await applyFreshHoldings(cfg);
+    logEvent({ type: 'holdings_refresh', ok, failed });
+  } catch (err) {
+    logEvent({ type: 'holdings_refresh_failed', error: (err && err.message) || String(err) });
+  }
+};
 
 const fmtCny = (n) => {
   if (n === null || n === undefined) return 'N/A';
@@ -290,6 +302,7 @@ const tryRealtimeDrawdownAlert = async (cfg, state) => {
 
 // 例行行情检查：计算回撤%，必要时触发“档位提醒”
 const marketCheck = async (cfg, state) => {
+  await refreshHoldingsBeforePush(cfg);
   ensureFreezeState(cfg, state);
 
   const targets = computeTargets(cfg);
@@ -390,6 +403,7 @@ const marketCheck = async (cfg, state) => {
 
 // 每周一次主动建仓提醒（阶段一：只到 40%），并自动遵守“冻结/回撤优先”纪律
 const weeklyActiveReminder = async (cfg, state) => {
+  await refreshHoldingsBeforePush(cfg);
   ensureFreezeState(cfg, state);
 
   const invested = Number(cfg.portfolio.investedNasdaqCny);
