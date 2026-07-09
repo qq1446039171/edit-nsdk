@@ -219,6 +219,19 @@
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
+      },
+      {
+        "id": "asset-1783591158652",
+        "name": "中概互联",
+        "category": "stock",
+        "kind": "exchange",
+        "code": "513050",
+        "secid": "1.513050",
+        "shares": 6000,
+        "amountCny": 0,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
       }
     ],
     "profitHistory": [
@@ -533,6 +546,14 @@
             "shares": 4257,
             "lastPrice": 1.8934,
             "marketValueCny": 8060.2
+          },
+          {
+            "id": "asset-1783591158652",
+            "name": "中概互联",
+            "category": "stock",
+            "shares": 6000,
+            "lastPrice": 0,
+            "marketValueCny": 0
           }
         ]
       }
