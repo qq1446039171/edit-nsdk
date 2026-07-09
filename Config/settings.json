@@ -1,6 +1,6 @@
 {
   "funds": {
-    "depositAmount": 209881.42,
+    "depositAmount": 201685.42,
     "nasdaqExposureLimitPercent": 70
   },
   "allocation": {
@@ -176,7 +176,7 @@
         "code": "",
         "secid": "",
         "shares": 0,
-        "amountCny": 11078,
+        "amountCny": 7524,
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
@@ -189,7 +189,7 @@
         "code": "",
         "secid": "",
         "shares": 0,
-        "amountCny": 7363,
+        "amountCny": 3486,
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
@@ -202,7 +202,20 @@
         "code": "",
         "secid": "",
         "shares": 0,
-        "amountCny": 50000,
+        "amountCny": 40000,
+        "lastPrice": 0,
+        "lastPriceAt": "",
+        "enabled": true
+      },
+      {
+        "id": "asset-1783591038097",
+        "name": "广发银行",
+        "category": "cash",
+        "kind": "cash",
+        "code": "",
+        "secid": "",
+        "shares": 0,
+        "amountCny": 9235,
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
@@ -423,7 +436,7 @@
       },
       {
         "date": "2026-07-09",
-        "totalAssetsCny": 209881.42,
+        "totalAssetsCny": 201685.42,
         "assets": [
           {
             "id": "513100",
@@ -525,9 +538,9 @@
       }
     ],
     "investedNasdaqCny": 73299.07,
-    "reserveCashNasdaqCny": 7363,
+    "reserveCashNasdaqCny": 3486,
     "reserveUsedNasdaqCny": 0,
-    "otherCashCny": 129219.35,
+    "otherCashCny": 124900.35,
     "fearOfMissingOut": false
   },
   "drawdown": {
