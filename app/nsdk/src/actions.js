@@ -16,8 +16,21 @@ const { getLatestDaily: getLatestDailyFinnhub, getOneYearHighDaily: getOneYearHi
 const { getVixLast7 } = require('./market/vix');
 const { computeTargets, computeDrawdown, buildTierTable, nextTierToTrigger } = require('./plan');
 const { applyFreshHoldings } = require('./market/holdings');
-const { logEvent } = require('./logger');
+const { logEvent, logPush } = require('./logger');
 const { push } = require('./push');
+
+// 统一记录一条推送的真实结果到可提交的审计日志（成/败 + ServerChan 返回 code）。
+const auditPush = (kind, title, pushRet, extra = {}) => {
+  logPush({
+    kind,
+    title,
+    ok: Boolean(pushRet && pushRet.ok),
+    status: pushRet ? pushRet.status : null,
+    code: pushRet ? (pushRet.code ?? null) : null,
+    text: String((pushRet && pushRet.text) || '').slice(0, 160),
+    ...extra,
+  });
+};
 
 // 推送前刷新持仓最新价（与网页同源的东财接口），让手机推送的纳指金额与网页一致。
 // 仅内存刷新，不回写 settings.json；全部失败则保留旧价、优雅降级继续推送。
@@ -197,7 +210,6 @@ const getMarketSnapshot = async (cfg) => {
 
 const pushTierAlert = async (cfg, state, benchmark, buy, tier) => {
   const row = state.drawdownRound?.table?.find(x => x.level === tier);
-  state.drawdownRound.alerted[String(tier)] = true;
 
   let vixLine = 'VIX恐慌指数（近7日）：N/A';
   try {
@@ -221,7 +233,12 @@ const pushTierAlert = async (cfg, state, benchmark, buy, tier) => {
   ].join('\n\n');
 
   const pushRet = await push(cfg, { title, body });
+  const ok = Boolean(pushRet && pushRet.ok);
+  // 只有真正送达才标记本档“已提醒”，否则保持未提醒，窗口内下次自动补发。
+  if (ok) state.drawdownRound.alerted[String(tier)] = true;
   logEvent({ type: 'tier_alert', tier, amountCny: row?.amountCny || null, pushRet });
+  auditPush('tier', title, pushRet, { tier });
+  return ok;
 };
 
 // 冻结条件（安全阀）：触发后“停止所有主动买入提醒”，但不涉及卖出
@@ -294,8 +311,7 @@ const tryRealtimeDrawdownAlert = async (cfg, state) => {
   ensureDrawdownRound(cfg, state, drawdownPct, levels);
   const t = nextTierToTrigger(drawdownPct, state.drawdownRound);
   if (t && state.drawdownRound) {
-    await pushTierAlert(cfg, state, benchmark, buy, t);
-    return true;
+    return await pushTierAlert(cfg, state, benchmark, buy, t);
   }
   return false;
 };
@@ -368,8 +384,7 @@ const marketCheck = async (cfg, state) => {
 
   const t = nextTierToTrigger(drawdownPct, state.drawdownRound);
   if (t && state.drawdownRound) {
-    await pushTierAlert(cfg, state, benchmark, buy, t);
-    return true;
+    return await pushTierAlert(cfg, state, benchmark, buy, t);
   }
 
   // 未触发档位时，推送例行状态（帮助你“只盯规则，不盯盘”）
@@ -398,7 +413,9 @@ const marketCheck = async (cfg, state) => {
   ].join('\n\n');
   const pushRet = await push(cfg, { title, body });
   logEvent({ type: 'market_report_push', pushRet, drawdownPct });
-  return true;
+  auditPush('market', title, pushRet, { drawdownPct });
+  // 按真实送达结果返回：失败则调用方不落去重 key，窗口内下次 cron 自动补发。
+  return Boolean(pushRet && pushRet.ok);
 };
 
 // 每周一次主动建仓提醒（阶段一：只到 40%），并自动遵守“冻结/回撤优先”纪律
@@ -426,6 +443,7 @@ const weeklyActiveReminder = async (cfg, state) => {
     ].join('\n\n');
     const pushRet = await push(cfg, { title, body });
     logEvent({ type: 'weekly_active_frozen', pushRet, invested, targets });
+    auditPush('weekly', title, pushRet);
     return;
   }
 
@@ -434,6 +452,7 @@ const weeklyActiveReminder = async (cfg, state) => {
     const body = '本周已触发回撤档位提醒，按纪律：优先执行回撤规则，本周不再额外加仓。';
     const pushRet = await push(cfg, { title, body });
     logEvent({ type: 'weekly_active_skipped_due_to_drawdown', pushRet });
+    auditPush('weekly', title, pushRet);
     return;
   }
 
@@ -450,6 +469,7 @@ const weeklyActiveReminder = async (cfg, state) => {
     ].join('\n\n');
     const pushRet = await push(cfg, { title, body });
     logEvent({ type: 'weekly_active_done', pushRet, invested, targets });
+    auditPush('weekly', title, pushRet);
     return;
   }
 
@@ -463,6 +483,7 @@ const weeklyActiveReminder = async (cfg, state) => {
   ].join('\n\n');
   const pushRet = await push(cfg, { title, body });
   logEvent({ type: 'weekly_active_reminder', pushRet, amount, invested, targets });
+  auditPush('weekly', title, pushRet);
 };
 
 module.exports = {

@@ -10,7 +10,7 @@
     "status": "node src/cli.js status",
     "set": "node src/cli.js set",
     "exec": "node src/cli.js exec",
-    "test": "node tests/config-assets.test.js && node tests/holdings.test.js",
+    "test": "node tests/config-assets.test.js && node tests/holdings.test.js && node tests/push-reliability.test.js",
     "selftest": "node src/selftest.js",
     "restart": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$ErrorActionPreference='Stop'; powershell -ExecutionPolicy Bypass -File .\\stop-running.ps1; Start-Sleep -Seconds 1; $nodePath = (Get-Command node).Source; Start-Process -WindowStyle Hidden -FilePath $nodePath -ArgumentList @('src\\scheduler.js') -WorkingDirectory (Get-Location)\"",
     "refresh": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$ErrorActionPreference='Stop'; powershell -ExecutionPolicy Bypass -File .\\stop-running.ps1; Start-Sleep -Seconds 1; $nodePath = (Get-Command node).Source; Start-Process -WindowStyle Hidden -FilePath $nodePath -ArgumentList @('src\\scheduler.js') -WorkingDirectory (Get-Location); Start-Sleep -Seconds 1; node .\\src\\run-once.js\""

@@ -10,7 +10,7 @@
  * - 使用 settings.json 的 nsdk.timezone 做“上海时间”对齐，避免 Windows 本地时区误差
  */
 const { loadConfig } = require('./config');
-const { loadState, saveState } = require('./state');
+const { loadState, saveState, shouldAttemptSlot, recordSlotAttempt, markSlotDone } = require('./state');
 const { getParts, isWeekday } = require('./time');
 const { marketCheck, weeklyActiveReminder, tryRealtimeDrawdownAlert } = require('./actions');
 const { logEvent } = require('./logger');
@@ -90,9 +90,12 @@ const tick = async (cfg, state) => {
     if (!isWeekday(parts.weekday)) continue;
     if (isWithinWindow(parts, t, 30)) {
       const key = runKeyForTarget(parts, 'market', t);
-      if (shouldRunOnce(state, key)) {
+      // 已成功或达重试上限则跳过；否则记一次尝试后发送，仅成功才落去重 key（失败自动补发）。
+      if (shouldAttemptSlot(state, key)) {
+        recordSlotAttempt(state, key);
         try {
-          await marketCheck(cfg, state);
+          const pushed = await marketCheck(cfg, state);
+          if (pushed) markSlotDone(state, key);
         } catch (err) {
           logEvent({ type: 'error', where: 'marketCheck', message: String(err?.message || err) });
         } finally {

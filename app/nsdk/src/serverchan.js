@@ -56,40 +56,58 @@ const buildSendUrl = (sendKey) => {
   return `https://sctapi.ftqq.com/${key}.send`;
 };
 
+// 判定 ServerChan 是否“真的送达”。
+// 关键：ServerChan 配额用尽/参数错误时会返回 HTTP 200 + 非 0 的 code，
+// 只看 res.ok（HTTP 层）会误判成功，导致该条推送被当成已发、不再补发。
+// 规则：HTTP 必须 2xx；若响应体能解析出 code 字段则要求 code===0；
+//       解析不出 code（非 JSON/网关文本）时回退按 HTTP 状态判定，避免误判成失败而重复发送。
+const interpretServerChanResponse = ({ httpOk, status, text }) => {
+  let code = null;
+  try {
+    const j = JSON.parse(text);
+    if (j && (j.code !== undefined && j.code !== null)) code = j.code;
+  } catch { /* 非 JSON：保持 code=null，走 HTTP 回退 */ }
+
+  const codeOk = code === null || code === 0 || code === '0';
+  return { ok: Boolean(httpOk) && codeOk, status, code, text };
+};
+
 // 发送一条推送：title 映射为 text，body 映射为 desp
-const sendServerChan = async ({ envPath, sendKey, title, body }) => {
+const sendServerChan = async ({ envPath, sendKey, title, body, fetchImpl } = {}) => {
+  const doFetch = fetchImpl || fetch;
   let resolved = null;
   if (!sendKey && envPath) {
     const ret = loadSendKeyFromEnvFile(envPath);
     sendKey = ret.sendKey;
     resolved = ret.resolved;
-    if (!sendKey) return { ok: false, status: 0, text: `${ret.reason}:${resolved}` };
+    if (!sendKey) return { ok: false, status: 0, code: null, text: `${ret.reason}:${resolved}` };
   }
 
-  if (!sendKey) return { ok: false, status: 0, text: 'sendkey_missing' };
+  if (!sendKey) return { ok: false, status: 0, code: null, text: 'sendkey_missing' };
 
   let url;
   try {
     url = buildSendUrl(sendKey);
   } catch (err) {
-    return { ok: false, status: 0, text: `bad_sendkey:${String(err?.message || err)}` };
+    return { ok: false, status: 0, code: null, text: `bad_sendkey:${String(err?.message || err)}` };
   }
 
   try {
     const params = new URLSearchParams({ text: title, desp: body || '' });
-    const res = await fetch(url, {
+    const res = await doFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params,
     });
     const text = await res.text();
-    return { ok: res.ok, status: res.status, text };
+    return interpretServerChanResponse({ httpOk: res.ok, status: res.status, text });
   } catch (err) {
-    return { ok: false, status: 0, text: `fetch_error:${String(err?.message || err)}` };
+    return { ok: false, status: 0, code: null, text: `fetch_error:${String(err?.message || err)}` };
   }
 };
 
 module.exports = {
   sendServerChan,
+  interpretServerChanResponse,
 };
 

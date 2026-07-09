@@ -1,5 +1,5 @@
 const { loadConfig } = require('./config');
-const { loadState, saveState } = require('./state');
+const { loadState, saveState, shouldAttemptSlot, recordSlotAttempt, markSlotDone } = require('./state');
 const { marketCheck, weeklyActiveReminder, tryRealtimeDrawdownAlert } = require('./actions');
 const { getParts, isWeekday } = require('./time');
 
@@ -7,12 +7,6 @@ const runKeyForTarget = (parts, name, t) => {
   const hh = String(t.hour).padStart(2, '0');
   const mm = String(t.minute).padStart(2, '0');
   return `${name}:${parts.ymd}:${hh}:${mm}`;
-};
-
-const shouldRunOnce = (state, key) => {
-  if (state.lastRunKeys[key]) return false;
-  state.lastRunKeys[key] = new Date().toISOString();
-  return true;
 };
 
 const isWithinWindow = (parts, t, windowMinutes) => {
@@ -33,10 +27,13 @@ const maybeRunDailyMarketCheck = async (cfg, state) => {
   for (const t of cfg.dailyChecks || []) {
     if (!isWithinWindow(parts, t, 30)) continue;
     const key = runKeyForTarget(parts, 'market', t);
-    if (state.lastRunKeys[key]) continue;
+    // 已成功（落 key）或已达重试上限则跳过；否则记一次尝试后发送。
+    if (!shouldAttemptSlot(state, key)) continue;
+    recordSlotAttempt(state, key);
     const pushed = await marketCheck(cfg, state);
+    // 仅当真正送达才落去重 key；失败时不落 key，窗口内下一次 cron 自动补发。
     if (pushed) {
-      state.lastRunKeys[key] = new Date().toISOString();
+      markSlotDone(state, key);
       return true;
     }
   }
