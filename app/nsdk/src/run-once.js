@@ -1,7 +1,7 @@
 const { loadConfig } = require('./config');
 const { loadState, saveState, shouldAttemptSlot, recordSlotAttempt, markSlotDone } = require('./state');
 const { marketCheck, weeklyActiveReminder, tryRealtimeDrawdownAlert } = require('./actions');
-const { getParts, isWeekday } = require('./time');
+const { getParts, isWeekday, isSlotDue } = require('./time');
 
 const runKeyForTarget = (parts, name, t) => {
   const hh = String(t.hour).padStart(2, '0');
@@ -9,29 +9,20 @@ const runKeyForTarget = (parts, name, t) => {
   return `${name}:${parts.ymd}:${hh}:${mm}`;
 };
 
-const isWithinWindow = (parts, t, windowMinutes) => {
-  const h = Number(parts.hour);
-  const m = Number(parts.minute);
-  const th = Number(t.hour);
-  const tm = Number(t.minute);
-  if (!Number.isFinite(h) || !Number.isFinite(m) || !Number.isFinite(th) || !Number.isFinite(tm)) return false;
-  const current = h * 60 + m;
-  const target = th * 60 + tm;
-  return Math.abs(current - target) <= windowMinutes;
-};
-
 const maybeRunDailyMarketCheck = async (cfg, state) => {
   const parts = getParts(new Date(), cfg.timezone);
   if (!isWeekday(parts.weekday)) return false;
 
   for (const t of cfg.dailyChecks || []) {
-    if (!isWithinWindow(parts, t, 30)) continue;
+    // 到点即补发：只要当天已过目标时间且该槽今天还没成功发过就发，
+    // 不再要求落在 ±30 分钟窗口内——对抗 GitHub Actions 定时任务延迟/丢弃。
+    if (!isSlotDue(parts, t)) continue;
     const key = runKeyForTarget(parts, 'market', t);
     // 已成功（落 key）或已达重试上限则跳过；否则记一次尝试后发送。
     if (!shouldAttemptSlot(state, key)) continue;
     recordSlotAttempt(state, key);
     const pushed = await marketCheck(cfg, state);
-    // 仅当真正送达才落去重 key；失败时不落 key，窗口内下一次 cron 自动补发。
+    // 仅当真正送达才落去重 key；失败时不落 key，下一次 cron 自动补发。
     if (pushed) {
       markSlotDone(state, key);
       return true;
@@ -59,7 +50,7 @@ const main = async () => {
   } else {
     const pushed = await maybeRunDailyMarketCheck(cfg, state);
     if (!pushed) {
-      console.log('[run-once] current time is outside nsdk.dailyChecks window, skip market push');
+      console.log('[run-once] no due dailyChecks slot to push (not yet due, or already sent today)');
     }
   }
   saveState(state);

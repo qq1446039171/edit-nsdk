@@ -11,7 +11,7 @@
  */
 const { loadConfig } = require('./config');
 const { loadState, saveState, shouldAttemptSlot, recordSlotAttempt, markSlotDone } = require('./state');
-const { getParts, isWeekday } = require('./time');
+const { getParts, isWeekday, isSlotDue } = require('./time');
 const { marketCheck, weeklyActiveReminder, tryRealtimeDrawdownAlert } = require('./actions');
 const { logEvent } = require('./logger');
 
@@ -88,7 +88,8 @@ const tick = async (cfg, state) => {
   // 工作日两次（或多次）例行检查：用于推送“当前回撤% / 下一档位 / 是否冻结”
   for (const t of cfg.dailyChecks || []) {
     if (!isWeekday(parts.weekday)) continue;
-    if (isWithinWindow(parts, t, 30)) {
+    // 到点即补发（不再限定 ±30 分钟窗口）：本机常驻兜底若错过点，下一个 tick 仍会补发。
+    if (isSlotDue(parts, t)) {
       const key = runKeyForTarget(parts, 'market', t);
       // 已成功或达重试上限则跳过；否则记一次尝试后发送，仅成功才落去重 key（失败自动补发）。
       if (shouldAttemptSlot(state, key)) {
