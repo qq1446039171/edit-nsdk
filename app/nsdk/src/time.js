@@ -8,13 +8,18 @@ const getParts = (date, timeZone) => {
     minute: '2-digit',
     second: '2-digit',
     weekday: 'short',
-    hour12: false,
+    // 必须用 hourCycle:'h23'，不能用 hour12:false。
+    // 部分 Node/ICU（含 GitHub Actions runner）把 hour12:false 解析成 h24 时制：
+    // 午夜输出 hour="24" 而不是 "00"，曾导致凌晨 00:04 被当成 24:04≥10:00/14:00 误发推送。
+    hourCycle: 'h23',
   }).formatToParts(date);
 
   const map = {};
   for (const p of parts) {
     if (p.type !== 'literal') map[p.type] = p.value;
   }
+  // 双保险：即使个别环境仍返回 "24"，也规范成 "00"（h24 的 24:xx 即午夜 00:xx）
+  if (map.hour === '24') map.hour = '00';
 
   const ymd = `${map.year}-${map.month}-${map.day}`;
   const hm = `${map.hour}:${map.minute}`;
@@ -34,11 +39,12 @@ const isWeekday = (weekdayShort) => {
 // 因此 GitHub Actions 严重延迟（如目标 10:00、实际 11:35 才跑）时仍能当天补发。
 // 配合带日期的去重 key（同一槽当天只成功发一次），补发不会重复。
 const isSlotDue = (parts, t) => {
-  const h = Number(parts && parts.hour);
+  let h = Number(parts && parts.hour);
   const m = Number(parts && parts.minute);
   const th = Number(t && t.hour);
   const tm = Number(t && t.minute);
   if (!Number.isFinite(h) || !Number.isFinite(m) || !Number.isFinite(th) || !Number.isFinite(tm)) return false;
+  if (h === 24) h = 0; // h24 时制的 24:xx 即午夜 00:xx，绝不能视为“已过白天时点”
   return (h * 60 + m) >= (th * 60 + tm);
 };
 

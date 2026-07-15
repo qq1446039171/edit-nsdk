@@ -33,5 +33,23 @@ assert.strictEqual(isSlotDue(P(13, 59), { hour: 14, minute: 0 }), false, '13:59 
 assert.strictEqual(isSlotDue({ hour: 'x', minute: 'y' }, { hour: 10, minute: 0 }), false, '非法时间不发');
 assert.strictEqual(isSlotDue(P(10, 0), { hour: NaN, minute: 0 }), false, '非法目标不发');
 
+// ============ 午夜 h24 回归（2026-07-15 事故）============
+// GitHub Actions 的 Node/ICU 下 hour12:false 解析成 h24 时制：北京午夜 00:04 输出 hour="24"，
+// 1444 分钟 ≥ 600/840，导致当天 10:00/14:00 两个槽在凌晨被误发。
+// 防御：isSlotDue 把 hour 24 视为 0（午夜），绝不能判定为已过白天时点。
+assert.strictEqual(isSlotDue({ hour: '24', minute: '04' }, { hour: 10, minute: 0 }), false, 'h24 午夜 24:04 不应视为已过 10:00');
+assert.strictEqual(isSlotDue({ hour: '24', minute: '04' }, { hour: 14, minute: 0 }), false, 'h24 午夜 24:04 不应视为已过 14:00');
+assert.strictEqual(isSlotDue({ hour: '24', minute: '00' }, { hour: 0, minute: 0 }), true, 'h24 午夜 24:00 = 00:00，对 00:00 槽应为到点');
+
+// getParts 源头防御：无论平台 ICU 默认 h23/h24，北京午夜必须输出 hour="00" 且日期正确
+const { getParts } = require('../src/time');
+const midnight = getParts(new Date('2026-07-14T16:04:10Z'), 'Asia/Shanghai'); // = 北京 2026-07-15 00:04
+assert.strictEqual(midnight.hour, '00', `北京午夜 hour 应为 "00"，实际 "${midnight.hour}"`);
+assert.strictEqual(midnight.ymd, '2026-07-15', 'ymd 应为跨天后的日期');
+assert.strictEqual(midnight.hm, '00:04', 'hm 应为 00:04');
+const noon = getParts(new Date('2026-07-15T04:00:00Z'), 'Asia/Shanghai'); // = 北京 12:00
+assert.strictEqual(noon.hour, '12', '正午 hour 应为 "12"（h23 不能变成 h11 制）');
+
 console.log('ok - isSlotDue 到点即补发，未到点不发');
+console.log('ok - 午夜 h24 回归：凌晨不再误发白天槽');
 console.log('slot-due.test.js: all assertions passed');
