@@ -160,10 +160,10 @@
       "code": "^NDX",
       "name": "纳指100（NDX）",
       "price": 29119,
-      "pct": -0.0705,
+      "pct": -0.0719,
       "high1y": 30771,
       "high1yDay": "2026-06-03",
-      "_rawPrice": 708.47,
+      "_rawPrice": 708.46,
       "_rawHigh": 748.65,
       "drawdownPct": 5.37
     },
@@ -173,7 +173,7 @@
       "price": 2.13,
       "pct": 0
     },
-    "at": "2026-07-22T15:10:55.446Z"
+    "at": "2026-07-22T16:45:16.074Z"
   },
   "freeze": {
     "active": false,
