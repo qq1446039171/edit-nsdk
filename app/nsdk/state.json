@@ -163,19 +163,56 @@
     "market:2026-07-29:14:00": "2026-07-29T07:12:34.462Z"
   },
   "pushAttempts": {},
-  "drawdownRound": null,
+  "drawdownRound": {
+    "startedAt": "2026-07-29T15:30:21.581Z",
+    "snapshotReserveCny": 42486,
+    "table": [
+      {
+        "level": 10,
+        "ratio": 0.2,
+        "amountCny": 8497
+      },
+      {
+        "level": 15,
+        "ratio": 0.3,
+        "amountCny": 12746
+      },
+      {
+        "level": 20,
+        "ratio": 0.3,
+        "amountCny": 12746
+      },
+      {
+        "level": 25,
+        "ratio": 0.2,
+        "amountCny": 8497
+      }
+    ],
+    "alerted": {
+      "10": true,
+      "15": false,
+      "20": false,
+      "25": false
+    },
+    "executed": {
+      "10": false,
+      "15": false,
+      "20": false,
+      "25": false
+    }
+  },
   "lastMarket": {
     "benchmark": {
       "provider": "finnhub",
       "code": "^NDX",
       "name": "纳指100（NDX）",
-      "price": 27764,
-      "pct": -0.972,
+      "price": 27428,
+      "pct": -1.208,
       "high1y": 30771,
       "high1yDay": "2026-06-03",
-      "_rawPrice": 675.49,
+      "_rawPrice": 667.33,
       "_rawHigh": 748.65,
-      "drawdownPct": 9.77
+      "drawdownPct": 10.86
     },
     "buy": {
       "code": "513100",
@@ -183,7 +220,7 @@
       "price": 2.074,
       "pct": 0.29
     },
-    "at": "2026-07-29T13:27:59.091Z"
+    "at": "2026-07-29T15:30:21.580Z"
   },
   "freeze": {
     "active": false,
