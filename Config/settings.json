@@ -1,6 +1,6 @@
 {
   "funds": {
-    "depositAmount": 206179.42,
+    "depositAmount": 201179.42,
     "nasdaqExposureLimitPercent": 70
   },
   "allocation": {
@@ -22,7 +22,7 @@
         "shares": 12000,
         "amountCny": 0,
         "lastPrice": 2.074,
-        "lastPriceAt": "2026-07-29T07:41:56.761Z",
+        "lastPriceAt": "2026-07-29T07:42:23.889Z",
         "enabled": true
       },
       {
@@ -35,7 +35,7 @@
         "shares": 2500,
         "amountCny": 0,
         "lastPrice": 1.538,
-        "lastPriceAt": "2026-07-29T07:41:56.791Z",
+        "lastPriceAt": "2026-07-29T07:42:23.943Z",
         "enabled": true
       },
       {
@@ -176,7 +176,7 @@
         "code": "",
         "secid": "",
         "shares": 0,
-        "amountCny": 7524,
+        "amountCny": 6524,
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
@@ -215,7 +215,7 @@
         "code": "",
         "secid": "",
         "shares": 0,
-        "amountCny": 9235,
+        "amountCny": 5235,
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
@@ -230,7 +230,7 @@
         "shares": 6000,
         "amountCny": 0,
         "lastPrice": 1.133,
-        "lastPriceAt": "2026-07-29T07:41:58.380Z",
+        "lastPriceAt": "2026-07-29T07:42:26.019Z",
         "enabled": true
       }
     ],
@@ -559,7 +559,7 @@
       },
       {
         "date": "2026-07-29",
-        "totalAssetsCny": 206179.42,
+        "totalAssetsCny": 201179.42,
         "assets": [
           {
             "id": "513100",
@@ -671,7 +671,7 @@
     "investedNasdaqCny": 71995.07,
     "reserveCashNasdaqCny": 42486,
     "reserveUsedNasdaqCny": 0,
-    "otherCashCny": 91698.35,
+    "otherCashCny": 86698.35,
     "fearOfMissingOut": false
   },
   "drawdown": {
