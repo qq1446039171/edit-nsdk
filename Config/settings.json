@@ -1,6 +1,6 @@
 {
   "funds": {
-    "depositAmount": 200642.92,
+    "depositAmount": 200645.41,
     "nasdaqExposureLimitPercent": 70
   },
   "allocation": {
@@ -19,10 +19,10 @@
         "kind": "exchange",
         "code": "513100",
         "secid": "1.513100",
-        "shares": 12589.1,
+        "shares": 13590.08,
         "amountCny": 0,
         "lastPrice": 2.037,
-        "lastPriceAt": "2026-07-30T05:38:34.948Z",
+        "lastPriceAt": "2026-07-30T05:39:19.340Z",
         "enabled": true
       },
       {
@@ -34,8 +34,8 @@
         "secid": "0.159941",
         "shares": 2500,
         "amountCny": 0,
-        "lastPrice": 1.513,
-        "lastPriceAt": "2026-07-30T05:38:34.980Z",
+        "lastPrice": 1.514,
+        "lastPriceAt": "2026-07-30T05:39:19.371Z",
         "enabled": true
       },
       {
@@ -215,7 +215,7 @@
         "code": "",
         "secid": "",
         "shares": 0,
-        "amountCny": 4035,
+        "amountCny": 1996,
         "lastPrice": 0,
         "lastPriceAt": "",
         "enabled": true
@@ -230,7 +230,7 @@
         "shares": 6000,
         "amountCny": 0,
         "lastPrice": 1.128,
-        "lastPriceAt": "2026-07-30T05:38:36.578Z",
+        "lastPriceAt": "2026-07-30T05:39:20.692Z",
         "enabled": true
       }
     ],
@@ -669,23 +669,23 @@
       },
       {
         "date": "2026-07-30",
-        "totalAssetsCny": 200642.92,
+        "totalAssetsCny": 200645.41,
         "assets": [
           {
             "id": "513100",
             "name": "同纳指ETF",
             "category": "nasdaq",
-            "shares": 12589.1,
+            "shares": 13590.08,
             "lastPrice": 2.037,
-            "marketValueCny": 25644
+            "marketValueCny": 27682.99
           },
           {
             "id": "asset-1780228838359",
             "name": "同纳指ETF",
             "category": "nasdaq",
             "shares": 2500,
-            "lastPrice": 1.513,
-            "marketValueCny": 3782.5
+            "lastPrice": 1.514,
+            "marketValueCny": 3785
           },
           {
             "id": "asset-1780228876679",
@@ -778,10 +778,10 @@
         ]
       }
     ],
-    "investedNasdaqCny": 72688.57,
+    "investedNasdaqCny": 74730.06,
     "reserveCashNasdaqCny": 42486,
     "reserveUsedNasdaqCny": 0,
-    "otherCashCny": 85468.35,
+    "otherCashCny": 83429.35,
     "fearOfMissingOut": false
   },
   "drawdown": {
