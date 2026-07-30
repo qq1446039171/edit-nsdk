@@ -230,6 +230,7 @@
     .notice.success { color: #c7f6c9; background: rgba(76, 175, 80, 0.1); border-color: rgba(76, 175, 80, 0.28); }
     .notice.warning { color: #ffe0a3; background: rgba(255, 152, 0, 0.1); border-color: rgba(255, 152, 0, 0.28); }
     .notice.error { color: #ffc2c0; background: rgba(239, 83, 80, 0.1); border-color: rgba(239, 83, 80, 0.3); }
+    .price-error { color: #ef5350; cursor: help; }
 
     .overview {
       display: grid;
@@ -1454,15 +1455,17 @@
       render();
       const currentAssets = portfolioAssets();
       let ok = 0;
-      let failed = 0;
+      const failures = [];
       for (let index = 0; index < currentAssets.length; index += 1) {
         const asset = currentAssets[index];
         if (isCashAsset(asset)) continue;
+        let primaryError = null;
         try {
           let quote;
           try {
             quote = asset.kind === "fund" ? await fetchFundPrice(asset) : await fetchExchangePrice(asset);
           } catch (error) {
+            primaryError = error;
             quote = asset.kind === "fund" ? await fetchExchangePrice(asset) : await fetchFundPrice(asset);
           }
           asset.lastPrice = Math.round(Number(quote.price) * 10000) / 10000;
@@ -1472,13 +1475,18 @@
           if (!asset.secid && asset.kind === "exchange") asset.secid = inferSecid(asset.code);
           ok += 1;
         } catch (error) {
-          failed += 1;
-          asset.lastPriceError = error?.message || String(error);
+          // 主备两路都失败：两个原因都展示，方便判断是接口挂了还是代码填错
+          const fallbackMsg = error?.message || String(error);
+          const reason = primaryError ? `${primaryError.message || primaryError}；备用：${fallbackMsg}` : fallbackMsg;
+          asset.lastPriceError = reason;
+          failures.push(`${asset.name || asset.code || `资产${index + 1}`}（${asset.code || "无代码"}）：${reason}`);
         }
       }
       state.assetPriceLoading = false;
-      state.assetPriceMessageType = failed ? "warning" : "success";
-      state.assetPriceMessage = failed ? `已刷新 ${ok} 个资产，${failed} 个失败；失败项保留上次价格。` : `已刷新 ${ok} 个资产价格。`;
+      state.assetPriceMessageType = failures.length ? "warning" : "success";
+      state.assetPriceMessage = failures.length
+        ? `已刷新 ${ok} 个资产，${failures.length} 个失败；失败项保留上次价格。\n${failures.join("\n")}`
+        : `已刷新 ${ok} 个资产价格。`;
       syncDerived();
       recordTodayProfitSnapshot();
       render();
@@ -1742,7 +1750,8 @@
     function renderNotice(message, type) {
       if (!message) return "";
       const mark = type === "success" ? "OK" : type === "error" ? "!" : type === "warning" ? "!" : "i";
-      return `<div class="notice ${escapeHtml(type)}"><strong>${mark}</strong><span>${escapeHtml(message)}</span></div>`;
+      const html = escapeHtml(message).replace(/\n/g, "<br>");
+      return `<div class="notice ${escapeHtml(type)}"><strong>${mark}</strong><span>${html}</span></div>`;
     }
 
     function renderActions() {
@@ -1854,6 +1863,8 @@
         const value = assetValue(asset);
         const pct = summary.total > 0 ? (value / summary.total) * 100 : 0;
         const isCash = isCashAsset(asset);
+        const priceError = isCash ? "" : String(raw?.lastPriceError || "");
+        const priceErrorMark = priceError ? ` <span class="price-error" title="上次刷新失败：${escapeHtml(priceError)}">⚠</span>` : "";
         return `
           <tr>
             <td><input data-asset-index="${index}" data-asset-field="name" value="${escapeHtml(asset.name)}" /></td>
@@ -1865,7 +1876,7 @@
             <td><input data-asset-index="${index}" data-asset-field="code" value="${escapeHtml(asset.code)}" ${isCash ? "disabled" : ""} /></td>
             <td><input data-asset-index="${index}" data-asset-field="shares" type="number" step="0.01" min="0" value="${escapeHtml(asset.shares)}" ${isCash ? "disabled" : ""} /></td>
             <td><input data-asset-index="${index}" data-asset-field="amountCny" type="number" step="100" min="0" value="${escapeHtml(asset.amountCny)}" ${isCash ? "" : "disabled"} /></td>
-            <td>¥${escapeHtml(fmtMoney(asset.lastPrice))}</td>
+            <td>¥${escapeHtml(fmtMoney(asset.lastPrice))}${priceErrorMark}</td>
             <td>¥${escapeHtml(fmtMoney(value))}</td>
             <td>${escapeHtml(fmtPercent(pct))}%</td>
             <td>
