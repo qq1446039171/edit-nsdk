@@ -29,4 +29,8 @@ assert.match(html, /raw\?\.lastPriceError/, '表格行应读取 lastPriceError')
 assert.match(html, /class="price-error" title="上次刷新失败：/, '价格列应有失败标记且悬浮显示原因');
 assert.match(html, /\.price-error \{/, '应有 price-error 样式');
 
+// ============ 基金净值数据源：fundgz 已下线，必须走 fundmobapi ============
+assert.ok(!html.includes('fundgz.1234567.com.cn'), '不得再引用已下线的 fundgz 接口');
+assert.match(html, /fundmobapi\.eastmoney\.com\/FundMNewApi\/FundMNFInfo/, '场外基金净值应走东财 fundmobapi 接口');
+
 console.log('refresh-failure-detail.test.js: all assertions passed');

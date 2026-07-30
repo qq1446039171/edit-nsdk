@@ -7,7 +7,7 @@
  *
  * 数据源与网页 index.html 完全一致：
  * - 场内（exchange）：push2.eastmoney.com（复用 eastmoney.getLatestPrice）
- * - 失败回退到场外基金净值：fundgz.1234567.com.cn/js/{code}.js（jsonpgz 包裹）
+ * - 失败回退到场外基金净值：fundmobapi.eastmoney.com FundMNFInfo（旧 fundgz JSONP 接口已下线）
  */
 const { getLatestPrice } = require('./eastmoney');
 const { summarizePortfolioAssets } = require('../config');
@@ -16,24 +16,22 @@ const round4 = (n) => Math.round(Number(n) * 10000) / 10000;
 
 const isCashAsset = (asset) => asset && (asset.kind === 'cash' || asset.category === 'cash' || asset.category === 'nasdaq_reserve_cash');
 
-// 场外基金净值：镜像网页 fetchFundPrice，取 gsz（估算净值）优先，回退 dwjz（单位净值）
+// 场外基金净值：镜像网页 fetchFundPrice。GSZ=盘中估值（QDII 常为 null）优先，回退 NAV=单位净值。
 const fetchFundNav = async (code) => {
   const c = String(code || '').trim();
   if (!c) throw new Error('缺少基金代码');
-  const url = `https://fundgz.1234567.com.cn/js/${encodeURIComponent(c)}.js?rt=${1}`;
+  const url = `https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex=1&pageSize=1&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid=nsdk&Fcodes=${encodeURIComponent(c)}`;
   const res = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0',
-      'Referer': 'https://fund.eastmoney.com/',
-      'Accept': '*/*',
+      'Accept': 'application/json',
     },
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const text = await res.text();
-  const m = text.match(/jsonpgz\((.*)\)/s);
-  if (!m) throw new Error('基金净值响应格式异常');
-  const data = JSON.parse(m[1]);
-  const price = Number(data.gsz || data.dwjz);
+  const json = await res.json();
+  const item = json && json.Datas && json.Datas[0];
+  if (!item) throw new Error('基金代码无数据');
+  const price = Number(item.GSZ) > 0 ? Number(item.GSZ) : Number(item.NAV);
   if (!Number.isFinite(price) || price <= 0) throw new Error('基金净值无效');
   return price;
 };
