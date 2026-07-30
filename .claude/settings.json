@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node tests/push-reliability.test.js)",
+      "Bash(npm test *)",
+      "Bash(node -e ' *)",
+      "Bash(rm -f \"c:/Users/14460/Desktop/editNsdk/Config/push-log.jsonl\")",
+      "Bash(node _verify_linux_logdir.js)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(rm -f _verify_linux_logdir.js)",
+      "Bash(echo \"fetch_exit=$?\")",
+      "Bash(git log *)",
+      "Bash(echo \"push_exit=$?\")",
+      "Bash(echo \"rebase_exit=$?\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\14460\\.claude\\projects\\c--Users-14460-Desktop-editNsdk\\memory"
+    ]
+  }
+}

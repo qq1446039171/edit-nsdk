@@ -1373,7 +1373,7 @@
       const secid = asset.secid || inferSecid(asset.code);
       if (!secid) throw new Error("缺少 secid");
       const fields = ["f43", "f58", "f170"].join(",");
-      const url = `https://push2.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&secid=${encodeURIComponent(secid)}&fields=${fields}`;
+      const url = `https://push2delay.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&secid=${encodeURIComponent(secid)}&fields=${fields}`;
       let json;
       try {
         const res = await fetch(url, { cache: "no-store" });

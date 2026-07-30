@@ -29,8 +29,13 @@ assert.match(html, /raw\?\.lastPriceError/, '表格行应读取 lastPriceError')
 assert.match(html, /class="price-error" title="上次刷新失败：/, '价格列应有失败标记且悬浮显示原因');
 assert.match(html, /\.price-error \{/, '应有 price-error 样式');
 
+// ============ 行情主源：push2 主域当前会断开连接，改走可访问的 push2delay ============
+assert.ok(!html.includes('https://push2.eastmoney.com/api/qt/stock/get'), '网页不得继续使用会断开连接的 push2 主域');
+assert.match(html, /https:\/\/push2delay\.eastmoney\.com\/api\/qt\/stock\/get/, '网页实时行情应使用可访问的 push2delay 域名');
+
 // ============ 基金净值数据源：fundgz 已下线，必须走 fundmobapi ============
 assert.ok(!html.includes('fundgz.1234567.com.cn'), '不得再引用已下线的 fundgz 接口');
 assert.match(html, /fundmobapi\.eastmoney\.com\/FundMNewApi\/FundMNFInfo/, '场外基金净值应走东财 fundmobapi 接口');
+
 
 console.log('refresh-failure-detail.test.js: all assertions passed');

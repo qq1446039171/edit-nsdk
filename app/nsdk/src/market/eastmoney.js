@@ -51,7 +51,7 @@ const getJson = async (url) => {
 // 最新价接口：f43=最新价，f58=名称，f170=涨跌幅
 const getLatestPrice = async (secid) => {
   const fields = ['f43', 'f58', 'f170', 'f60'].join(',');
-  const url = `https://push2.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&secid=${encodeURIComponent(secid)}&fields=${fields}`;
+  const url = `https://push2delay.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&secid=${encodeURIComponent(secid)}&fields=${fields}`;
   const json = await getJson(url);
   const d = json?.data;
   const priceRaw = d?.f43;

@@ -1,10 +1,17 @@
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const {
   fetchHoldingPrice,
   refreshHoldingsPrices,
   applyFreshHoldings,
 } = require('../src/market/holdings');
 const { buildConfigFromSettings } = require('../src/config');
+
+// ============ 行情主源：推送端也必须使用当前可访问的 push2delay ============
+const eastmoneySource = fs.readFileSync(path.join(__dirname, '..', 'src', 'market', 'eastmoney.js'), 'utf8');
+assert.ok(!eastmoneySource.includes('https://push2.eastmoney.com/api/qt/stock/get'), '推送端不得继续使用会断开连接的 push2 主域');
+assert.match(eastmoneySource, /https:\/\/push2delay\.eastmoney\.com\/api\/qt\/stock\/get/, '推送端实时行情应使用可访问的 push2delay 域名');
 
 // ---- 测试替身：一个可控的 getLatestPrice 假实现 ----
 // 记录被查询的 secid，并按 map 返回价格；缺失则抛错（模拟接口失败）。
