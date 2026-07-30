@@ -1,6 +1,7 @@
-const { loadConfig } = require('./config');
+const { loadConfig, resolveSettingsPath } = require('./config');
 const { loadState, saveState, shouldAttemptSlot, recordSlotAttempt, markSlotDone } = require('./state');
 const { marketCheck, weeklyActiveReminder, tryRealtimeDrawdownAlert } = require('./actions');
+const { recordDailySnapshot } = require('./profit-snapshot');
 const { getParts, isWeekday, isSlotDue } = require('./time');
 
 const runKeyForTarget = (parts, name, t) => {
@@ -25,6 +26,9 @@ const maybeRunDailyMarketCheck = async (cfg, state) => {
     // 仅当真正送达才落去重 key；失败时不落 key，下一次 cron 自动补发。
     if (pushed) {
       markSlotDone(state, key);
+      // 每日推送成功后，把刷新过的总资产写入 profitHistory（随 workflow 提交回仓库），
+      // 让盈利走势图每个工作日都有数据点，而不是只在打开网页的日子才有。
+      recordDailySnapshot(cfg, { settingsPath: resolveSettingsPath(), ymd: parts.ymd });
       return true;
     }
   }

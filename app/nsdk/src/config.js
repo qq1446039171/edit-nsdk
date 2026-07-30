@@ -210,5 +210,6 @@ const loadConfig = () => {
 module.exports = {
   buildConfigFromSettings,
   loadConfig,
+  resolveSettingsPath,
   summarizePortfolioAssets,
 };
