@@ -36,6 +36,7 @@ assert.match(html, /https:\/\/push2delay\.eastmoney\.com\/api\/qt\/stock\/get/, 
 // ============ 基金净值数据源：fundgz 已下线，必须走 fundmobapi ============
 assert.ok(!html.includes('fundgz.1234567.com.cn'), '不得再引用已下线的 fundgz 接口');
 assert.match(html, /fundmobapi\.eastmoney\.com\/FundMNewApi\/FundMNFInfo/, '场外基金净值应走东财 fundmobapi 接口');
+assert.match(html, /api\.fund\.eastmoney\.com\/f10\/lsjz/, 'FundMNFInfo 无数据时应回退到东财 lsjz 历史净值');
 
 
 console.log('refresh-failure-detail.test.js: all assertions passed');

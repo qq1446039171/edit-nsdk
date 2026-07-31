@@ -2,6 +2,7 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const {
+  fetchFundNav,
   fetchHoldingPrice,
   refreshHoldingsPrices,
   applyFreshHoldings,
@@ -22,6 +23,40 @@ const makeFakeGetLatestPrice = (priceBySecid, calls) => async (secid) => {
   if (price === null) throw new Error(`quote failed for ${secid}`);
   return { name: 'X', price, pct: 0 };
 };
+
+// ============ fetchFundNav：FundMNFInfo 无数据时回退到历史净值 lsjz ============
+(async () => {
+  const originalFetch = global.fetch;
+  const calls = [];
+  global.fetch = async (url) => {
+    const textUrl = String(url);
+    calls.push(textUrl);
+    if (textUrl.includes('FundMNFInfo')) {
+      return {
+        ok: true,
+        json: async () => ({ Datas: [], ErrCode: 0, Success: true }),
+      };
+    }
+    if (textUrl.includes('/f10/lsjz')) {
+      return {
+        ok: true,
+        text: async () => 'jQueryTest({"Data":{"LSJZList":[{"FSRQ":"2026-07-29","DWJZ":"7.5480","JZZZL":"-2.12"}]},"ErrCode":0})',
+      };
+    }
+    throw new Error(`unexpected url ${textUrl}`);
+  };
+
+  try {
+    const price = await fetchFundNav('270042');
+    assert.strictEqual(price, 7.548, '移动基金接口无数据时应回退到 lsjz 最新单位净值');
+    assert.ok(calls.some((url) => url.includes('FundMNFInfo')), '应先尝试 FundMNFInfo');
+    assert.ok(calls.some((url) => url.includes('/f10/lsjz')), '应再尝试 lsjz 历史净值');
+    console.log('ok - fetchFundNav 回退 lsjz 历史净值');
+  } finally {
+    if (originalFetch) global.fetch = originalFetch;
+    else delete global.fetch;
+  }
+})();
 
 // ============ fetchHoldingPrice：push2 主路径 ============
 (async () => {

@@ -1415,21 +1415,50 @@
       });
     }
 
+    function parseFundQuoteNumber(...values) {
+      for (const value of values) {
+        const price = Number(value);
+        if (Number.isFinite(price) && price > 0) return price;
+      }
+      return null;
+    }
+
+    function parseFundMobileQuote(asset, json) {
+      const item = json?.Datas?.[0];
+      if (!item) throw new Error("基金代码无数据");
+      const price = parseFundQuoteNumber(item.GSZ, item.NAV);
+      if (!price) throw new Error("基金净值无效");
+      const pct = Number(item.GSZ) > 0 ? Number(item.GSZZL) : Number(item.NAVCHGRT);
+      return { price, name: item.SHORTNAME || asset.name, pct: Number.isFinite(pct) ? pct : null };
+    }
+
+    function parseFundHistoryQuote(asset, json) {
+      const item = json?.Data?.LSJZList?.[0];
+      if (!item) throw new Error("历史净值无数据");
+      const price = parseFundQuoteNumber(item.DWJZ);
+      if (!price) throw new Error("历史净值无效");
+      const pct = Number(item.JZZZL);
+      return { price, name: asset.name, pct: Number.isFinite(pct) ? pct : null };
+    }
+
     async function fetchFundPrice(asset) {
       const code = String(asset.code || "").trim();
       if (!code) throw new Error("缺少基金代码");
       // 旧的天天基金 fundgz JSONP 接口已下线（返回 404 页面）；
-      // 改用东财基金移动接口，CORS 开放可直接 fetch。GSZ=盘中估值（QDII 常为 null），NAV=单位净值。
-      const url = `https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex=1&pageSize=1&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid=nsdk&Fcodes=${encodeURIComponent(code)}`;
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`基金净值 HTTP ${res.status}`);
-      const json = await res.json();
-      const item = json?.Datas?.[0];
-      if (!item) throw new Error("基金代码无数据");
-      const price = Number(item.GSZ) > 0 ? Number(item.GSZ) : Number(item.NAV);
-      if (!Number.isFinite(price) || price <= 0) throw new Error("基金净值无效");
-      const pct = Number(item.GSZ) > 0 ? Number(item.GSZZL) : Number(item.NAVCHGRT);
-      return { price, name: item.SHORTNAME || asset.name, pct: Number.isFinite(pct) ? pct : null };
+      // 先用东财基金移动接口，若返回空/异常，再用 f10/lsjz JSONP 取最新单位净值。
+      try {
+        const url = `https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex=1&pageSize=1&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid=nsdk&Fcodes=${encodeURIComponent(code)}`;
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(`基金净值 HTTP ${res.status}`);
+        return parseFundMobileQuote(asset, await res.json());
+      } catch (primaryError) {
+        try {
+          const url = `https://api.fund.eastmoney.com/f10/lsjz?callback=__callback__&fundCode=${encodeURIComponent(code)}&pageIndex=1&pageSize=1&startDate=&endDate=&_=${Date.now()}`;
+          return parseFundHistoryQuote(asset, await fetchJsonp(url));
+        } catch (fallbackError) {
+          throw new Error(`${primaryError?.message || primaryError}；lsjz：${fallbackError?.message || fallbackError}`);
+        }
+      }
     }
 
     async function refreshAssetPrices() {
