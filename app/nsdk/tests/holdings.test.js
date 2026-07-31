@@ -25,7 +25,7 @@ const makeFakeGetLatestPrice = (priceBySecid, calls) => async (secid) => {
 };
 
 // ============ fetchFundNav：优先走历史净值 lsjz，避免 FundMNFInfo 网络繁忙 ============
-(async () => {
+let fetchFundNavTests = (async () => {
   const originalFetch = global.fetch;
   const calls = [];
   global.fetch = async (url) => {
@@ -55,8 +55,8 @@ const makeFakeGetLatestPrice = (priceBySecid, calls) => async (secid) => {
   }
 })();
 
-// ============ fetchFundNav：lsjz 失败时保留 FundMNFInfo 兜底 ============
-(async () => {
+// ============ fetchFundNav：lsjz 失败时先走 pingzhongdata，再保留 FundMNFInfo 兜底 ============
+fetchFundNavTests = fetchFundNavTests.then(async () => {
   const originalFetch = global.fetch;
   const calls = [];
   global.fetch = async (url) => {
@@ -66,6 +66,50 @@ const makeFakeGetLatestPrice = (priceBySecid, calls) => async (secid) => {
       return {
         ok: true,
         text: async () => 'jQueryTest({"Data":{"LSJZList":[]}})',
+      };
+    }
+    if (textUrl.includes('/pingzhongdata/')) {
+      return {
+        ok: true,
+        text: async () => 'var Data_netWorthTrend = [{"x":1,"y":7.548,"equityReturn":-2.12}];',
+      };
+    }
+    if (textUrl.includes('FundMNFInfo')) {
+      throw new Error('不应在 pingzhongdata 成功时调用 FundMNFInfo');
+    }
+    throw new Error(`unexpected url ${textUrl}`);
+  };
+
+  try {
+    const price = await fetchFundNav('270042');
+    assert.strictEqual(price, 7.548, 'lsjz 失败时应使用 pingzhongdata 最新单位净值');
+    assert.ok(calls[0].includes('/f10/lsjz'), '第一路应是 lsjz');
+    assert.ok(calls[1].includes('/pingzhongdata/'), '第二路应是 pingzhongdata');
+    assert.ok(!calls.some((url) => url.includes('FundMNFInfo')), 'pingzhongdata 成功时不应再打 FundMNFInfo');
+    console.log('ok - fetchFundNav lsjz 失败后 pingzhongdata 兜底');
+  } finally {
+    if (originalFetch) global.fetch = originalFetch;
+    else delete global.fetch;
+  }
+});
+
+// ============ fetchFundNav：pingzhongdata 也失败时才走 FundMNFInfo ============
+fetchFundNavTests = fetchFundNavTests.then(async () => {
+  const originalFetch = global.fetch;
+  const calls = [];
+  global.fetch = async (url) => {
+    const textUrl = String(url);
+    calls.push(textUrl);
+    if (textUrl.includes('/f10/lsjz')) {
+      return {
+        ok: true,
+        text: async () => 'jQueryTest({"Data":{"LSJZList":[]}})',
+      };
+    }
+    if (textUrl.includes('/pingzhongdata/')) {
+      return {
+        ok: true,
+        text: async () => 'var Data_netWorthTrend = [];',
       };
     }
     if (textUrl.includes('FundMNFInfo')) {
@@ -79,15 +123,21 @@ const makeFakeGetLatestPrice = (priceBySecid, calls) => async (secid) => {
 
   try {
     const price = await fetchFundNav('270042');
-    assert.strictEqual(price, 7.548, 'lsjz 失败时仍应保留 FundMNFInfo 兜底');
+    assert.strictEqual(price, 7.548, '前两路失败时仍应保留 FundMNFInfo 兜底');
     assert.ok(calls[0].includes('/f10/lsjz'), '第一路应是 lsjz');
-    assert.ok(calls[1].includes('FundMNFInfo'), '第二路才是 FundMNFInfo');
-    console.log('ok - fetchFundNav lsjz 失败后 FundMNFInfo 兜底');
+    assert.ok(calls[1].includes('/pingzhongdata/'), '第二路应是 pingzhongdata');
+    assert.ok(calls[2].includes('FundMNFInfo'), '第三路才是 FundMNFInfo');
+    console.log('ok - fetchFundNav pingzhongdata 失败后 FundMNFInfo 兜底');
   } finally {
     if (originalFetch) global.fetch = originalFetch;
     else delete global.fetch;
   }
-})();
+});
+
+fetchFundNavTests.catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});
 
 // ============ fetchHoldingPrice：push2 主路径 ============
 (async () => {

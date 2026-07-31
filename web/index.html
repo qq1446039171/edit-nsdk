@@ -1423,6 +1423,12 @@
       return null;
     }
 
+    function normalizeFundCode(code) {
+      const clean = String(code || "").replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+      const match = clean.match(/\d{6}/);
+      return match ? match[0] : clean;
+    }
+
     function parseFundMobileQuote(asset, json) {
       const item = json?.Datas?.[0];
       if (!item) throw new Error("基金代码无数据");
@@ -1441,23 +1447,75 @@
       return { price, name: asset.name, pct: Number.isFinite(pct) ? pct : null };
     }
 
+    function parseFundPageQuote(asset, win) {
+      const trend = win?.Data_netWorthTrend;
+      const latest = Array.isArray(trend) ? trend[trend.length - 1] : null;
+      const price = parseFundQuoteNumber(latest?.y);
+      if (!price) throw new Error("基金页净值无数据");
+      const pct = Number(latest?.equityReturn);
+      return { price, name: win?.fS_name || asset.name, pct: Number.isFinite(pct) ? pct : null };
+    }
+
+    function fetchFundPageQuote(asset, code) {
+      return new Promise((resolve, reject) => {
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.setAttribute("aria-hidden", "true");
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error("基金页脚本请求超时"));
+        }, 10000);
+        function cleanup() {
+          clearTimeout(timeout);
+          iframe.remove();
+        }
+        document.body.appendChild(iframe);
+        const doc = iframe.contentDocument;
+        const script = doc.createElement("script");
+        script.onload = () => {
+          try {
+            const quote = parseFundPageQuote(asset, iframe.contentWindow);
+            cleanup();
+            resolve(quote);
+          } catch (error) {
+            cleanup();
+            reject(error);
+          }
+        };
+        script.onerror = () => {
+          cleanup();
+          reject(new Error("基金页脚本请求失败"));
+        };
+        script.src = `https://fund.eastmoney.com/pingzhongdata/${encodeURIComponent(code)}.js?v=${Date.now()}`;
+        doc.head.appendChild(script);
+      });
+    }
+
     async function fetchFundPrice(asset) {
-      const code = String(asset.code || "").trim();
+      const code = normalizeFundCode(asset.code);
       if (!code) throw new Error("缺少基金代码");
-      // 旧的天天基金 fundgz JSONP 接口已下线；FundMNFInfo 近期频繁“网络繁忙”，正常刷新优先走 lsjz。
+      // 旧的天天基金 fundgz JSONP 接口已下线；lsjz 限 Referer，FundMNFInfo 近期频繁“网络繁忙”。
+      const errors = [];
+      try {
+        return await fetchFundPageQuote(asset, code);
+      } catch (error) {
+        errors.push(`pingzhongdata：${error?.message || error}`);
+      }
       try {
         const url = `https://api.fund.eastmoney.com/f10/lsjz?callback=__callback__&fundCode=${encodeURIComponent(code)}&pageIndex=1&pageSize=1&startDate=&endDate=&_=${Date.now()}`;
         return parseFundHistoryQuote(asset, await fetchJsonp(url));
-      } catch (primaryError) {
-        try {
-          const url = `https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex=1&pageSize=1&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid=nsdk&Fcodes=${encodeURIComponent(code)}`;
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) throw new Error(`基金净值 HTTP ${res.status}`);
-          return parseFundMobileQuote(asset, await res.json());
-        } catch (fallbackError) {
-          throw new Error(`lsjz：${primaryError?.message || primaryError}；FundMNFInfo：${fallbackError?.message || fallbackError}`);
-        }
+      } catch (error) {
+        errors.push(`lsjz：${error?.message || error}`);
       }
+      try {
+        const url = `https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex=1&pageSize=1&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid=nsdk&Fcodes=${encodeURIComponent(code)}`;
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(`基金净值 HTTP ${res.status}`);
+        return parseFundMobileQuote(asset, await res.json());
+      } catch (error) {
+        errors.push(`FundMNFInfo：${error?.message || error}`);
+      }
+      throw new Error(errors.join("；"));
     }
 
     async function refreshAssetPrices() {

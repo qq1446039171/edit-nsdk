@@ -33,13 +33,15 @@ assert.match(html, /\.price-error \{/, '应有 price-error 样式');
 assert.ok(!html.includes('https://push2.eastmoney.com/api/qt/stock/get'), '网页不得继续使用会断开连接的 push2 主域');
 assert.match(html, /https:\/\/push2delay\.eastmoney\.com\/api\/qt\/stock\/get/, '网页实时行情应使用可访问的 push2delay 域名');
 
-// ============ 基金净值数据源：fundgz 已下线，FundMNFInfo 网络繁忙时必须优先走 lsjz ============
+// ============ 基金净值数据源：fundgz 已下线，浏览器优先走不依赖 Referer 的 pingzhongdata ============
 assert.ok(!html.includes('fundgz.1234567.com.cn'), '不得再引用已下线的 fundgz 接口');
-assert.match(html, /api\.fund\.eastmoney\.com\/f10\/lsjz/, '场外基金净值应优先走东财 lsjz 历史净值');
-assert.match(html, /fundmobapi\.eastmoney\.com\/FundMNewApi\/FundMNFInfo/, 'lsjz 失败时才保留 FundMNFInfo 兜底');
+assert.match(html, /fund\.eastmoney\.com\/pingzhongdata\//, '网页场外基金净值应优先走东财基金页脚本数据');
+assert.match(html, /api\.fund\.eastmoney\.com\/f10\/lsjz/, '应保留东财 lsjz 历史净值兜底');
+assert.match(html, /fundmobapi\.eastmoney\.com\/FundMNewApi\/FundMNFInfo/, '应保留 FundMNFInfo 最后兜底');
 assert.ok(
+  html.indexOf('https://fund.eastmoney.com/pingzhongdata/') < html.indexOf('https://api.fund.eastmoney.com/f10/lsjz') &&
   html.indexOf('https://api.fund.eastmoney.com/f10/lsjz') < html.indexOf('https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo'),
-  '网页正常刷新必须先请求 lsjz，避免 FundMNFInfo 网络繁忙'
+  '网页正常刷新必须按 pingzhongdata -> lsjz -> FundMNFInfo 顺序取价'
 );
 
 

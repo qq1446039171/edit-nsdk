@@ -8,7 +8,8 @@
  * 数据源与网页 index.html 完全一致：
  * - 场内（exchange）：push2.eastmoney.com（复用 eastmoney.getLatestPrice）
  * - 失败回退到场外基金净值：先 api.fund.eastmoney.com f10/lsjz 历史净值，
- *   再用 fundmobapi.eastmoney.com FundMNFInfo 兜底（旧 fundgz JSONP 接口已下线）
+ *   再 fund.eastmoney.com pingzhongdata，最后用 fundmobapi.eastmoney.com FundMNFInfo 兜底
+ *   （旧 fundgz JSONP 接口已下线）
  */
 const { getLatestPrice } = require('./eastmoney');
 const { summarizePortfolioAssets } = require('../config');
@@ -31,6 +32,23 @@ const parseJsonpPayload = (text) => {
   const end = raw.lastIndexOf(')');
   const body = start >= 0 && end > start ? raw.slice(start + 1, end) : raw;
   return JSON.parse(body);
+};
+
+const normalizeFundCode = (code) => {
+  const clean = String(code || '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+  const match = clean.match(/\d{6}/);
+  return match ? match[0] : clean;
+};
+
+const parsePingzhongFundNav = (text) => {
+  const raw = String(text || '');
+  const match = raw.match(/Data_netWorthTrend\s*=\s*(\[[\s\S]*?\]);/);
+  if (!match) throw new Error('基金页净值无数据');
+  const trend = JSON.parse(match[1]);
+  const latest = Array.isArray(trend) ? trend[trend.length - 1] : null;
+  const price = parseFundNavNumber(latest && latest.y);
+  if (!price) throw new Error('基金页净值无效');
+  return price;
 };
 
 const fetchOrThrow = async (url, options = {}) => {
@@ -75,15 +93,31 @@ const fetchFundNavFromHistory = async (code) => {
   return price;
 };
 
-// 场外基金净值：优先用 lsjz 最新披露净值，FundMNFInfo 近期频繁返回“网络繁忙”仅作兜底。
+const fetchFundNavFromPingzhong = async (code) => {
+  const url = `https://fund.eastmoney.com/pingzhongdata/${encodeURIComponent(code)}.js?v=${Date.now()}`;
+  const res = await fetchOrThrow(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': 'application/javascript,text/javascript,*/*',
+    },
+  });
+  return parsePingzhongFundNav(await res.text());
+};
+
+// 场外基金净值：Node 侧 lsjz 可带 Referer；再用浏览器可用的基金页脚本兜底，FundMNFInfo 最后兜底。
 const fetchFundNav = async (code) => {
-  const c = String(code || '').trim();
+  const c = normalizeFundCode(code);
   if (!c) throw new Error('缺少基金代码');
   const errors = [];
   try {
     return await fetchFundNavFromHistory(c);
   } catch (err) {
     errors.push(`lsjz：${(err && err.message) || String(err)}`);
+  }
+  try {
+    return await fetchFundNavFromPingzhong(c);
+  } catch (err) {
+    errors.push(`pingzhongdata：${(err && err.message) || String(err)}`);
   }
   try {
     return await fetchFundNavFromMobile(c);
