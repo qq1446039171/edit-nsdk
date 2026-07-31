@@ -776,6 +776,116 @@
             "marketValueCny": 6768
           }
         ]
+      },
+      {
+        "date": "2026-07-31",
+        "totalAssetsCny": 200383,
+        "assets": [
+          {
+            "id": "513100",
+            "name": "同纳指ETF",
+            "category": "nasdaq",
+            "shares": 13590.08,
+            "lastPrice": 2.108,
+            "marketValueCny": 28647.89
+          },
+          {
+            "id": "asset-1780228838359",
+            "name": "同纳指ETF",
+            "category": "nasdaq",
+            "shares": 2500,
+            "lastPrice": 1.57,
+            "marketValueCny": 3925
+          },
+          {
+            "id": "asset-1780228876679",
+            "name": "广发纳斯达克",
+            "category": "nasdaq",
+            "shares": 1981,
+            "lastPrice": 8.1596,
+            "marketValueCny": 16164.17
+          },
+          {
+            "id": "asset-1780228945307",
+            "name": "天弘纳斯达克",
+            "category": "nasdaq",
+            "shares": 2936,
+            "lastPrice": 2.028,
+            "marketValueCny": 5954.21
+          },
+          {
+            "id": "asset-1780229579903",
+            "name": "大成纳斯达克",
+            "category": "nasdaq",
+            "shares": 1277,
+            "lastPrice": 6.2925,
+            "marketValueCny": 8035.52
+          },
+          {
+            "id": "asset-1780229660445",
+            "name": "摩根纳斯达克",
+            "category": "nasdaq",
+            "shares": 2155,
+            "lastPrice": 1.7437,
+            "marketValueCny": 3757.67
+          },
+          {
+            "id": "asset-1780229683998",
+            "name": "南方纳斯达克",
+            "category": "nasdaq",
+            "shares": 3433,
+            "lastPrice": 2.2782,
+            "marketValueCny": 7821.06
+          },
+          {
+            "id": "asset-1780229749526",
+            "name": "华宝纳斯达克",
+            "category": "nasdaq",
+            "shares": 686,
+            "lastPrice": 2.2295,
+            "marketValueCny": 1529.44
+          },
+          {
+            "id": "asset-1780229780945",
+            "name": "中证消费50",
+            "category": "stock",
+            "shares": 794,
+            "lastPrice": 1.171,
+            "marketValueCny": 929.77
+          },
+          {
+            "id": "asset-1780229832187",
+            "name": "易方达沪深300",
+            "category": "stock",
+            "shares": 2181,
+            "lastPrice": 1.8606,
+            "marketValueCny": 4057.97
+          },
+          {
+            "id": "asset-1780230265572",
+            "name": "华安黄金ETF",
+            "category": "gold",
+            "shares": 18141,
+            "lastPrice": 2.9656,
+            "marketValueCny": 53798.95
+          },
+          {
+            "id": "asset-1780230333146",
+            "name": "富国黄金ETF",
+            "category": "gold",
+            "shares": 4257,
+            "lastPrice": 1.8467,
+            "marketValueCny": 7861.4
+          },
+          {
+            "id": "asset-1783591158652",
+            "name": "中概互联",
+            "category": "stock",
+            "shares": 6000,
+            "lastPrice": 1.149,
+            "marketValueCny": 6894
+          }
+        ]
       }
     ],
     "investedNasdaqCny": 74730.06,
