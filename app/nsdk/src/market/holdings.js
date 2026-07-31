@@ -7,8 +7,8 @@
  *
  * 数据源与网页 index.html 完全一致：
  * - 场内（exchange）：push2.eastmoney.com（复用 eastmoney.getLatestPrice）
- * - 失败回退到场外基金净值：先 fundmobapi.eastmoney.com FundMNFInfo，
- *   再 api.fund.eastmoney.com f10/lsjz 历史净值（旧 fundgz JSONP 接口已下线）
+ * - 失败回退到场外基金净值：先 api.fund.eastmoney.com f10/lsjz 历史净值，
+ *   再用 fundmobapi.eastmoney.com FundMNFInfo 兜底（旧 fundgz JSONP 接口已下线）
  */
 const { getLatestPrice } = require('./eastmoney');
 const { summarizePortfolioAssets } = require('../config');
@@ -75,20 +75,20 @@ const fetchFundNavFromHistory = async (code) => {
   return price;
 };
 
-// 场外基金净值：GSZ=盘中估值（QDII 常为 null）优先，回退 NAV/DWJZ=单位净值。
+// 场外基金净值：优先用 lsjz 最新披露净值，FundMNFInfo 近期频繁返回“网络繁忙”仅作兜底。
 const fetchFundNav = async (code) => {
   const c = String(code || '').trim();
   if (!c) throw new Error('缺少基金代码');
   const errors = [];
   try {
-    return await fetchFundNavFromMobile(c);
-  } catch (err) {
-    errors.push(`FundMNFInfo：${(err && err.message) || String(err)}`);
-  }
-  try {
     return await fetchFundNavFromHistory(c);
   } catch (err) {
     errors.push(`lsjz：${(err && err.message) || String(err)}`);
+  }
+  try {
+    return await fetchFundNavFromMobile(c);
+  } catch (err) {
+    errors.push(`FundMNFInfo：${(err && err.message) || String(err)}`);
   }
   throw new Error(errors.join('；'));
 };

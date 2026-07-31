@@ -1444,19 +1444,18 @@
     async function fetchFundPrice(asset) {
       const code = String(asset.code || "").trim();
       if (!code) throw new Error("缺少基金代码");
-      // 旧的天天基金 fundgz JSONP 接口已下线（返回 404 页面）；
-      // 先用东财基金移动接口，若返回空/异常，再用 f10/lsjz JSONP 取最新单位净值。
+      // 旧的天天基金 fundgz JSONP 接口已下线；FundMNFInfo 近期频繁“网络繁忙”，正常刷新优先走 lsjz。
       try {
-        const url = `https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex=1&pageSize=1&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid=nsdk&Fcodes=${encodeURIComponent(code)}`;
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) throw new Error(`基金净值 HTTP ${res.status}`);
-        return parseFundMobileQuote(asset, await res.json());
+        const url = `https://api.fund.eastmoney.com/f10/lsjz?callback=__callback__&fundCode=${encodeURIComponent(code)}&pageIndex=1&pageSize=1&startDate=&endDate=&_=${Date.now()}`;
+        return parseFundHistoryQuote(asset, await fetchJsonp(url));
       } catch (primaryError) {
         try {
-          const url = `https://api.fund.eastmoney.com/f10/lsjz?callback=__callback__&fundCode=${encodeURIComponent(code)}&pageIndex=1&pageSize=1&startDate=&endDate=&_=${Date.now()}`;
-          return parseFundHistoryQuote(asset, await fetchJsonp(url));
+          const url = `https://fundmobapi.eastmoney.com/FundMNewApi/FundMNFInfo?pageIndex=1&pageSize=1&plat=Android&appType=ttjj&product=EFund&Version=1&deviceid=nsdk&Fcodes=${encodeURIComponent(code)}`;
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) throw new Error(`基金净值 HTTP ${res.status}`);
+          return parseFundMobileQuote(asset, await res.json());
         } catch (fallbackError) {
-          throw new Error(`${primaryError?.message || primaryError}；lsjz：${fallbackError?.message || fallbackError}`);
+          throw new Error(`lsjz：${primaryError?.message || primaryError}；FundMNFInfo：${fallbackError?.message || fallbackError}`);
         }
       }
     }
