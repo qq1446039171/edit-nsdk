@@ -779,71 +779,71 @@
       },
       {
         "date": "2026-07-31",
-        "totalAssetsCny": 200383,
+        "totalAssetsCny": 196903,
         "assets": [
           {
             "id": "513100",
             "name": "同纳指ETF",
             "category": "nasdaq",
             "shares": 13590.08,
-            "lastPrice": 2.108,
-            "marketValueCny": 28647.89
+            "lastPrice": 2.115,
+            "marketValueCny": 28743.02
           },
           {
             "id": "asset-1780228838359",
             "name": "同纳指ETF",
             "category": "nasdaq",
             "shares": 2500,
-            "lastPrice": 1.57,
-            "marketValueCny": 3925
+            "lastPrice": 1.379,
+            "marketValueCny": 3447.5
           },
           {
             "id": "asset-1780228876679",
             "name": "广发纳斯达克",
             "category": "nasdaq",
             "shares": 1981,
-            "lastPrice": 8.1596,
-            "marketValueCny": 16164.17
+            "lastPrice": 7.548,
+            "marketValueCny": 14952.59
           },
           {
             "id": "asset-1780228945307",
             "name": "天弘纳斯达克",
             "category": "nasdaq",
             "shares": 2936,
-            "lastPrice": 2.028,
-            "marketValueCny": 5954.21
+            "lastPrice": 1.8873,
+            "marketValueCny": 5541.11
           },
           {
             "id": "asset-1780229579903",
             "name": "大成纳斯达克",
             "category": "nasdaq",
             "shares": 1277,
-            "lastPrice": 6.2925,
-            "marketValueCny": 8035.52
+            "lastPrice": 5.8367,
+            "marketValueCny": 7453.47
           },
           {
             "id": "asset-1780229660445",
             "name": "摩根纳斯达克",
             "category": "nasdaq",
             "shares": 2155,
-            "lastPrice": 1.7437,
-            "marketValueCny": 3757.67
+            "lastPrice": 1.6264,
+            "marketValueCny": 3504.89
           },
           {
             "id": "asset-1780229683998",
             "name": "南方纳斯达克",
             "category": "nasdaq",
             "shares": 3433,
-            "lastPrice": 2.2782,
-            "marketValueCny": 7821.06
+            "lastPrice": 2.1208,
+            "marketValueCny": 7280.71
           },
           {
             "id": "asset-1780229749526",
             "name": "华宝纳斯达克",
             "category": "nasdaq",
             "shares": 686,
-            "lastPrice": 2.2295,
-            "marketValueCny": 1529.44
+            "lastPrice": 2.1569,
+            "marketValueCny": 1479.63
           },
           {
             "id": "asset-1780229780945",
@@ -882,8 +882,8 @@
             "name": "中概互联",
             "category": "stock",
             "shares": 6000,
-            "lastPrice": 1.149,
-            "marketValueCny": 6894
+            "lastPrice": 1.141,
+            "marketValueCny": 6846
           }
         ]
       }
