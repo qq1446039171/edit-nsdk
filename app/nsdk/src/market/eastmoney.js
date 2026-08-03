@@ -48,22 +48,49 @@ const getJson = async (url) => {
   return res.json();
 };
 
+const parseLatestKline = (secid, json, fallbackName = null) => {
+  const data = json && json.data ? json.data : null;
+  const klines = data && data.klines;
+  if (!Array.isArray(klines) || klines.length === 0) throw new Error(`No kline data: ${secid}`);
+  const cols = String(klines[klines.length - 1]).split(',');
+  const price = normalizePrice(parseNumber(cols[2]));
+  if (!Number.isFinite(price) || price <= 0) throw new Error(`Invalid kline close: ${secid}`);
+  return {
+    name: (data && data.name) || fallbackName,
+    price,
+    pct: normalizePct(parseNumber(cols[8])),
+    raw: data || null,
+  };
+};
+
+const getLatestKlineClose = async (secid, fallbackName = null) => {
+  const fields1 = 'f1,f2,f3,f4,f5,f6';
+  const fields2 = 'f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61';
+  const url = `https://push2his.eastmoney.com/api/qt/stock/kline/get?ut=fa5fd1943c7b386f172d6893dbfba10b&secid=${encodeURIComponent(secid)}&fields1=${fields1}&fields2=${fields2}&klt=101&fqt=1&beg=0&end=20500101&lmt=1`;
+  return parseLatestKline(secid, await getJson(url), fallbackName);
+};
+
 // 最新价接口：f43=最新价，f58=名称，f170=涨跌幅
 const getLatestPrice = async (secid) => {
   const fields = ['f43', 'f58', 'f170', 'f60'].join(',');
   const url = `https://push2delay.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&secid=${encodeURIComponent(secid)}&fields=${fields}`;
-  const json = await getJson(url);
-  const d = json?.data;
-  const priceRaw = d?.f43;
-  const price = normalizePrice(parseNumber(priceRaw));
-  const name = d?.f58 || null;
-  const pct = normalizePct(parseNumber(d?.f170));
-  return {
-    name,
-    price,
-    pct,
-    raw: d || null,
-  };
+  try {
+    const json = await getJson(url);
+    const d = json && json.data ? json.data : null;
+    const priceRaw = d && d.f43;
+    const price = normalizePrice(parseNumber(priceRaw));
+    const name = (d && d.f58) || null;
+    const pct = normalizePct(parseNumber(d && d.f170));
+    if (!Number.isFinite(price) || price <= 0) return getLatestKlineClose(secid, name);
+    return {
+      name,
+      price,
+      pct,
+      raw: d || null,
+    };
+  } catch (err) {
+    return getLatestKlineClose(secid);
+  }
 };
 
 // K线接口：klt=101（日K），lmt=260（最近约 1 年交易日），取每条的 high 列做最大值
@@ -72,7 +99,7 @@ const getOneYearHigh = async (secid) => {
   const fields2 = 'f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61';
   const url = `https://push2his.eastmoney.com/api/qt/stock/kline/get?ut=fa5fd1943c7b386f172d6893dbfba10b&secid=${encodeURIComponent(secid)}&fields1=${fields1}&fields2=${fields2}&klt=101&fqt=1&beg=0&end=20500101&lmt=260`;
   const json = await getJson(url);
-  const klines = json?.data?.klines;
+  const klines = json && json.data && json.data.klines;
   if (!Array.isArray(klines) || klines.length === 0) {
     throw new Error('No kline data');
   }
@@ -93,6 +120,7 @@ const getOneYearHigh = async (secid) => {
 
 module.exports = {
   getLatestPrice,
+  getLatestKlineClose,
   getOneYearHigh,
 };
 

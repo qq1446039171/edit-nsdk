@@ -7,12 +7,14 @@ const {
   refreshHoldingsPrices,
   applyFreshHoldings,
 } = require('../src/market/holdings');
+const { getLatestPrice: getLatestEastmoneyPrice } = require('../src/market/eastmoney');
 const { buildConfigFromSettings } = require('../src/config');
 
 // ============ 行情主源：推送端也必须使用当前可访问的 push2delay ============
 const eastmoneySource = fs.readFileSync(path.join(__dirname, '..', 'src', 'market', 'eastmoney.js'), 'utf8');
 assert.ok(!eastmoneySource.includes('https://push2.eastmoney.com/api/qt/stock/get'), '推送端不得继续使用会断开连接的 push2 主域');
 assert.match(eastmoneySource, /https:\/\/push2delay\.eastmoney\.com\/api\/qt\/stock\/get/, '推送端实时行情应使用可访问的 push2delay 域名');
+assert.match(eastmoneySource, /getLatestKlineClose/, 'push2 返回 0 时应使用日 K 最新收盘价兜底');
 
 // ---- 测试替身：一个可控的 getLatestPrice 假实现 ----
 // 记录被查询的 secid，并按 map 返回价格；缺失则抛错（模拟接口失败）。
@@ -134,6 +136,47 @@ fetchFundNavTests = fetchFundNavTests.then(async () => {
   }
 });
 
+// ============ getLatestPrice：push2delay 失败时走日 K 收盘价 ============
+fetchFundNavTests = fetchFundNavTests.then(async () => {
+  const originalFetch = global.fetch;
+  const calls = [];
+  global.fetch = async (url) => {
+    const textUrl = String(url);
+    calls.push(textUrl);
+    if (textUrl.includes('push2delay.eastmoney.com')) {
+      return {
+        ok: false,
+        status: 503,
+        text: async () => 'busy',
+      };
+    }
+    if (textUrl.includes('push2his.eastmoney.com')) {
+      return {
+        ok: true,
+        json: async () => ({
+          data: {
+            name: '纳指ETF国泰',
+            klines: ['2026-08-03,2.100,2.127,2.130,2.090,0,0,0,0.71,0,0'],
+          },
+        }),
+      };
+    }
+    throw new Error(`unexpected url ${textUrl}`);
+  };
+
+  try {
+    const quote = await getLatestEastmoneyPrice('1.513100');
+    assert.strictEqual(quote.price, 2.127, 'push2delay 失败时应使用日 K 最新收盘价');
+    assert.strictEqual(quote.name, '纳指ETF国泰', 'K 线兜底应保留名称');
+    assert.ok(calls[0].includes('push2delay.eastmoney.com'), '第一路应先查 push2delay');
+    assert.ok(calls[1].includes('push2his.eastmoney.com'), '第二路应再查 push2his');
+    console.log('ok - getLatestPrice push2delay 失败后用日 K 兜底');
+  } finally {
+    if (originalFetch) global.fetch = originalFetch;
+    else delete global.fetch;
+  }
+});
+
 fetchFundNavTests.catch((err) => {
   console.error(err);
   process.exitCode = 1;
@@ -166,6 +209,25 @@ fetchFundNavTests.catch((err) => {
   assert.strictEqual(price, 8.2947, 'push2 失败时应用基金净值');
   assert.strictEqual(fundCalledWith, '270042', '基金回退应按 code 查询');
   console.log('ok - fetchHoldingPrice push2 失败回退基金净值');
+})();
+
+// ============ fetchHoldingPrice：场内 ETF push2 返回 0 时，不得误用基金净值 ============
+(async () => {
+  let fundCalled = false;
+  const price = await fetchHoldingPrice(
+    { secid: '1.513100', code: '513100', kind: 'exchange' },
+    {
+      getLatestPrice: async () => ({ name: '纳指ETF国泰', price: 0, pct: 0 }),
+      getLatestKlineClose: async () => ({ name: '纳指ETF国泰', price: 2.127, pct: 0.71 }),
+      fetchFundNav: async () => {
+        fundCalled = true;
+        return 1.9024;
+      },
+    }
+  );
+  assert.strictEqual(price, 2.127, '场内 ETF 应用日 K 收盘价兜底');
+  assert.strictEqual(fundCalled, false, '场内 ETF 有 K 线兜底时不得误用基金净值');
+  console.log('ok - fetchHoldingPrice 场内 ETF 用 K 线兜底');
 })();
 
 // ============ refreshHoldingsPrices：更新非现金、跳过现金、失败保留旧价 ============

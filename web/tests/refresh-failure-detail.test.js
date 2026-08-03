@@ -32,6 +32,11 @@ assert.match(html, /\.price-error \{/, '应有 price-error 样式');
 // ============ 行情主源：push2 主域当前会断开连接，改走可访问的 push2delay ============
 assert.ok(!html.includes('https://push2.eastmoney.com/api/qt/stock/get'), '网页不得继续使用会断开连接的 push2 主域');
 assert.match(html, /https:\/\/push2delay\.eastmoney\.com\/api\/qt\/stock\/get/, '网页实时行情应使用可访问的 push2delay 域名');
+assert.match(html, /push2his\.eastmoney\.com\/api\/qt\/stock\/kline\/get/, 'push2delay 返回 0 时，网页应先用场内 K 线收盘价兜底');
+assert.ok(
+  html.indexOf('fetchExchangeKlinePrice') < html.indexOf('async function fetchFundPrice'),
+  '场内 ETF 不应在 push2 异常时直接降级为基金净值'
+);
 
 // ============ 基金净值数据源：fundgz 已下线，浏览器优先走不依赖 Referer 的 pingzhongdata ============
 assert.ok(!html.includes('fundgz.1234567.com.cn'), '不得再引用已下线的 fundgz 接口');

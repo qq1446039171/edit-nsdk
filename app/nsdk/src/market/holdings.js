@@ -11,7 +11,7 @@
  *   再 fund.eastmoney.com pingzhongdata，最后用 fundmobapi.eastmoney.com FundMNFInfo 兜底
  *   （旧 fundgz JSONP 接口已下线）
  */
-const { getLatestPrice } = require('./eastmoney');
+const { getLatestPrice, getLatestKlineClose } = require('./eastmoney');
 const { summarizePortfolioAssets } = require('../config');
 
 const round4 = (n) => Math.round(Number(n) * 10000) / 10000;
@@ -129,10 +129,11 @@ const fetchFundNav = async (code) => {
 
 /**
  * 取单只资产的最新价。
- * deps 用于测试注入：{ getLatestPrice, fetchFundNav }
+ * deps 用于测试注入：{ getLatestPrice, getLatestKlineClose, fetchFundNav }
  */
 const fetchHoldingPrice = async (asset, deps = {}) => {
   const _getLatest = deps.getLatestPrice || getLatestPrice;
+  const _getLatestKlineClose = deps.getLatestKlineClose || getLatestKlineClose;
   const _fetchFund = deps.fetchFundNav || fetchFundNav;
 
   const secid = asset && asset.secid ? String(asset.secid).trim() : '';
@@ -145,7 +146,14 @@ const fetchHoldingPrice = async (asset, deps = {}) => {
       const price = Number(quote && quote.price);
       if (Number.isFinite(price) && price > 0) return price;
     } catch (err) {
-      // 落到基金净值回退
+      // 落到日 K 收盘价兜底
+    }
+    try {
+      const quote = await _getLatestKlineClose(secid);
+      const price = Number(quote && quote.price);
+      if (Number.isFinite(price) && price > 0) return price;
+    } catch (err) {
+      // 再落到基金净值回退
     }
   }
 
