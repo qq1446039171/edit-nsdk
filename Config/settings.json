@@ -1109,23 +1109,23 @@
       },
       {
         "date": "2026-08-05",
-        "totalAssetsCny": 202385,
+        "totalAssetsCny": 202442,
         "assets": [
           {
             "id": "513100",
             "name": "同纳指ETF",
             "category": "nasdaq",
             "shares": 13590.08,
-            "lastPrice": 2.256,
-            "marketValueCny": 30659.22
+            "lastPrice": 2.26,
+            "marketValueCny": 30713.58
           },
           {
             "id": "asset-1780228838359",
             "name": "同纳指ETF",
             "category": "nasdaq",
             "shares": 2500,
-            "lastPrice": 1.683,
-            "marketValueCny": 4207.5
+            "lastPrice": 1.689,
+            "marketValueCny": 4222.5
           },
           {
             "id": "asset-1780228876679",
@@ -1212,8 +1212,8 @@
             "name": "中概互联",
             "category": "stock",
             "shares": 6000,
-            "lastPrice": 1.193,
-            "marketValueCny": 7158
+            "lastPrice": 1.191,
+            "marketValueCny": 7146
           }
         ]
       }
