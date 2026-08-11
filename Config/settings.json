@@ -1706,11 +1706,7 @@
     "dailyChecks": [
       {
         "hour": "11",
-        "minute": "00"
-      },
-      {
-        "hour": "14",
-        "minute": "00"
+        "minute": "30"
       }
     ]
   }
