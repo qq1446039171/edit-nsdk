@@ -1549,111 +1549,111 @@
       },
       {
         "date": "2026-08-11",
-        "totalAssetsCny": 201277,
+        "totalAssetsCny": 207564,
         "assets": [
           {
             "id": "513100",
             "name": "同纳指ETF",
             "category": "nasdaq",
             "shares": 13590.08,
-            "lastPrice": 2.037,
-            "marketValueCny": 27682.99
+            "lastPrice": 2.235,
+            "marketValueCny": 30373.83
           },
           {
             "id": "asset-1780228838359",
             "name": "同纳指ETF",
             "category": "nasdaq",
             "shares": 2500,
-            "lastPrice": 1.666,
-            "marketValueCny": 4165
+            "lastPrice": 1.665,
+            "marketValueCny": 4162.5
           },
           {
             "id": "asset-1780228876679",
             "name": "广发纳斯达克",
             "category": "nasdaq",
             "shares": 1981,
-            "lastPrice": 8.1596,
-            "marketValueCny": 16164.17
+            "lastPrice": 8.2454,
+            "marketValueCny": 16334.14
           },
           {
             "id": "asset-1780228945307",
             "name": "天弘纳斯达克",
             "category": "nasdaq",
             "shares": 2936,
-            "lastPrice": 2.028,
-            "marketValueCny": 5954.21
+            "lastPrice": 2.0532,
+            "marketValueCny": 6028.2
           },
           {
             "id": "asset-1780229579903",
             "name": "大成纳斯达克",
             "category": "nasdaq",
             "shares": 1277,
-            "lastPrice": 6.2925,
-            "marketValueCny": 8035.52
+            "lastPrice": 6.3738,
+            "marketValueCny": 8139.34
           },
           {
             "id": "asset-1780229660445",
             "name": "摩根纳斯达克",
             "category": "nasdaq",
             "shares": 2155,
-            "lastPrice": 1.7437,
-            "marketValueCny": 3757.67
+            "lastPrice": 1.7674,
+            "marketValueCny": 3808.75
           },
           {
             "id": "asset-1780229683998",
             "name": "南方纳斯达克",
             "category": "nasdaq",
             "shares": 3433,
-            "lastPrice": 2.2782,
-            "marketValueCny": 7821.06
+            "lastPrice": 2.3096,
+            "marketValueCny": 7928.86
           },
           {
             "id": "asset-1780229749526",
             "name": "华宝纳斯达克",
             "category": "nasdaq",
             "shares": 686,
-            "lastPrice": 2.2295,
-            "marketValueCny": 1529.44
+            "lastPrice": 2.3189,
+            "marketValueCny": 1590.77
           },
           {
             "id": "asset-1780229780945",
             "name": "中证消费50",
             "category": "stock",
             "shares": 794,
-            "lastPrice": 1.0343,
-            "marketValueCny": 821.23
+            "lastPrice": 1.1394,
+            "marketValueCny": 904.68
           },
           {
             "id": "asset-1780229832187",
             "name": "易方达沪深300",
             "category": "stock",
             "shares": 2181,
-            "lastPrice": 1.9782,
-            "marketValueCny": 4314.45
+            "lastPrice": 1.9194,
+            "marketValueCny": 4186.21
           },
           {
             "id": "asset-1780230265572",
             "name": "华安黄金ETF",
             "category": "gold",
             "shares": 18141,
-            "lastPrice": 3.0288,
-            "marketValueCny": 54945.46
+            "lastPrice": 3.1789,
+            "marketValueCny": 57668.42
           },
           {
             "id": "asset-1780230333146",
             "name": "富国黄金ETF",
             "category": "gold",
             "shares": 4257,
-            "lastPrice": 1.8934,
-            "marketValueCny": 8060.2
+            "lastPrice": 1.9846,
+            "marketValueCny": 8448.44
           },
           {
             "id": "asset-1783591158652",
             "name": "中概互联",
             "category": "stock",
             "shares": 6000,
-            "lastPrice": 1.17,
-            "marketValueCny": 7020
+            "lastPrice": 1.164,
+            "marketValueCny": 6984
           }
         ]
       }
