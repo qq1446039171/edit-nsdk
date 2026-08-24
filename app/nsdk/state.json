@@ -235,13 +235,13 @@
       "provider": "finnhub",
       "code": "^NDX",
       "name": "纳指100（NDX）",
-      "price": 29106,
-      "pct": -0.7415,
+      "price": 29091,
+      "pct": -0.7933,
       "high1y": 30771,
       "high1yDay": "2026-06-03",
-      "_rawPrice": 708.15,
+      "_rawPrice": 707.78,
       "_rawHigh": 748.65,
-      "drawdownPct": 5.41
+      "drawdownPct": 5.46
     },
     "buy": {
       "code": "513100",
@@ -249,7 +249,7 @@
       "price": 2.166,
       "pct": -1.32
     },
-    "at": "2026-08-24T16:52:37.594Z"
+    "at": "2026-08-24T17:21:36.469Z"
   },
   "freeze": {
     "active": false,
